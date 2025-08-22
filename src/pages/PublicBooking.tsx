@@ -98,6 +98,7 @@ const PublicBooking = () => {
   });
 
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
+  const [occupiedTimeSlots, setOccupiedTimeSlots] = useState<string[]>([]);
 
   useEffect(() => {
     if (slug) {
@@ -106,10 +107,10 @@ const PublicBooking = () => {
   }, [slug]);
 
   useEffect(() => {
-    if (selectedDate && business) {
+    if (selectedDate) {
       generateAvailableTimeSlots();
     }
-  }, [selectedDate, business, workingHours]);
+  }, [selectedDate, selectedStaff, workingHours, business]);
 
   const fetchBusinessData = async (businessSlug: string) => {
     try {
@@ -197,14 +198,15 @@ const PublicBooking = () => {
     }
   };
 
-  const generateAvailableTimeSlots = () => {
-    if (!selectedDate || !workingHours.length) return;
+  const generateAvailableTimeSlots = async () => {
+    if (!selectedDate || !workingHours.length || !business) return;
 
     const dayOfWeek = selectedDate.getDay();
     const todayWorkingHours = workingHours.find(wh => wh.day_of_week === dayOfWeek);
 
     if (!todayWorkingHours || todayWorkingHours.is_closed) {
       setAvailableTimeSlots([]);
+      setOccupiedTimeSlots([]);
       return;
     }
 
@@ -226,7 +228,55 @@ const PublicBooking = () => {
       }
     }
 
+    // Check for occupied time slots if staff is selected
+    const occupied: string[] = [];
+    if (selectedStaff && selectedStaff !== "") {
+      try {
+        const dateStr = format(selectedDate, 'yyyy-MM-dd');
+        const { data: appointments, error } = await supabase
+          .from('appointments')
+          .select('start_time, end_time')
+          .eq('business_id', business.id)
+          .eq('staff_id', selectedStaff)
+          .eq('appointment_date', dateStr)
+          .in('status', ['scheduled', 'in_progress']);
+
+        if (error) throw error;
+
+        // Mark all overlapping time slots as occupied
+        appointments?.forEach(appointment => {
+          const appointmentStart = appointment.start_time;
+          const appointmentEnd = appointment.end_time;
+          
+          slots.forEach(slot => {
+            // Check if this slot overlaps with the appointment
+            const slotEnd = addMinutesToTime(slot, 30);
+            if (timeOverlaps(slot, slotEnd, appointmentStart, appointmentEnd)) {
+              occupied.push(slot);
+            }
+          });
+        });
+      } catch (error) {
+        console.error('Randevu kontrol hatası:', error);
+      }
+    }
+
     setAvailableTimeSlots(slots);
+    setOccupiedTimeSlots(occupied);
+  };
+
+  // Helper function to add minutes to a time string
+  const addMinutesToTime = (timeStr: string, minutes: number): string => {
+    const [hours, mins] = timeStr.split(':').map(Number);
+    const totalMinutes = hours * 60 + mins + minutes;
+    const newHours = Math.floor(totalMinutes / 60);
+    const newMins = totalMinutes % 60;
+    return `${newHours.toString().padStart(2, '0')}:${newMins.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to check if two time ranges overlap
+  const timeOverlaps = (start1: string, end1: string, start2: string, end2: string): boolean => {
+    return start1 < end2 && start2 < end1;
   };
 
   const handleServiceToggle = (serviceId: string) => {
@@ -633,24 +683,40 @@ const PublicBooking = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {availableTimeSlots.length > 0 ? (
-                        <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                          {availableTimeSlots.map((time) => (
-                            <Button
-                              key={time}
-                              variant={selectedTime === time ? "brand" : "outline"}
-                              onClick={() => setSelectedTime(time)}
-                              className="w-full"
-                            >
-                              {time}
-                            </Button>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <p className="text-muted-foreground">Bu tarih için uygun saat bulunmuyor.</p>
-                        </div>
-                      )}
+                       {availableTimeSlots.length > 0 ? (
+                         <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                           {availableTimeSlots.map((time) => {
+                             const isOccupied = occupiedTimeSlots.includes(time);
+                             return (
+                               <Button
+                                 key={time}
+                                 variant={selectedTime === time ? "brand" : isOccupied ? "destructive" : "outline"}
+                                 onClick={() => !isOccupied && setSelectedTime(time)}
+                                 disabled={isOccupied}
+                                 className={cn(
+                                   "w-full relative",
+                                   isOccupied && "cursor-not-allowed opacity-60"
+                                 )}
+                               >
+                                 {time}
+                                 {isOccupied && (
+                                   <span className="ml-1 text-xs">DOLU</span>
+                                 )}
+                               </Button>
+                             );
+                           })}
+                         </div>
+                       ) : (
+                         <div className="text-center py-8">
+                           <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                           <p className="text-muted-foreground mb-2">Bu tarih için uygun saat bulunmuyor.</p>
+                           {selectedStaff && selectedStaff !== "" && (
+                             <p className="text-sm text-muted-foreground">
+                               Seçilen personelin bu tarihte müsait saati bulunmuyor.
+                             </p>
+                           )}
+                         </div>
+                       )}
                       <div className="flex justify-between mt-6">
                         <Button onClick={() => setStep(3)} variant="outline">
                           <ArrowLeft className="h-4 w-4 mr-2" />
