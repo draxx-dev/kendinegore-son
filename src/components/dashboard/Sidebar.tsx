@@ -163,7 +163,7 @@ export function DashboardSidebar() {
         </SidebarGroup>
 
         {/* Settings */}
-        <div className="px-3 border-t border-border pt-1">
+        <div className="px-3 border-t border-border pt-0">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
