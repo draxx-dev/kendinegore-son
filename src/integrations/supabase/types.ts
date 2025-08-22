@@ -224,6 +224,7 @@ export type Database = {
           amount: number
           appointment_id: string
           created_at: string
+          expected_payment_date: string | null
           id: string
           notes: string | null
           payment_date: string | null
@@ -235,6 +236,7 @@ export type Database = {
           amount: number
           appointment_id: string
           created_at?: string
+          expected_payment_date?: string | null
           id?: string
           notes?: string | null
           payment_date?: string | null
@@ -246,6 +248,7 @@ export type Database = {
           amount?: number
           appointment_id?: string
           created_at?: string
+          expected_payment_date?: string | null
           id?: string
           notes?: string | null
           payment_date?: string | null

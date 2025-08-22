@@ -34,6 +34,8 @@ interface CustomerDebt {
   customer_phone: string;
   total_debt: number;
   appointment_count: number;
+  oldest_payment_date?: string;
+  expected_payment_date?: string;
 }
 
 const Payments = () => {
@@ -51,6 +53,7 @@ const Payments = () => {
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month'>('today');
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [totalExpenses, setTotalExpenses] = useState(0);
+  const [debtSortBy, setDebtSortBy] = useState<'debt' | 'oldest' | 'expected'>('debt');
 
   const { toast } = useToast();
 
@@ -58,7 +61,7 @@ const Payments = () => {
     fetchPaymentData();
     fetchCustomerDebts();
     fetchExpenses();
-  }, [selectedDate, dateRange]);
+  }, [selectedDate, dateRange, debtSortBy]);
 
   const getDateRange = () => {
     const today = new Date();
@@ -158,6 +161,8 @@ const Payments = () => {
         .select(`
           amount,
           payment_status,
+          created_at,
+          expected_payment_date,
           appointments!inner(
             customers!inner(id, first_name, last_name, phone)
           )
@@ -177,18 +182,54 @@ const Payments = () => {
           const existing = debtsMap.get(customerId)!;
           existing.total_debt += Number(payment.amount);
           existing.appointment_count++;
+          
+          // Update oldest payment date
+          if (!existing.oldest_payment_date || payment.created_at < existing.oldest_payment_date) {
+            existing.oldest_payment_date = payment.created_at;
+          }
+          
+          // Update closest expected payment date
+          if (payment.expected_payment_date) {
+            if (!existing.expected_payment_date || payment.expected_payment_date < existing.expected_payment_date) {
+              existing.expected_payment_date = payment.expected_payment_date;
+            }
+          }
         } else {
           debtsMap.set(customerId, {
             customer_id: customerId,
             customer_name: `${customer.first_name} ${customer.last_name}`,
             customer_phone: customer.phone,
             total_debt: Number(payment.amount),
-            appointment_count: 1
+            appointment_count: 1,
+            oldest_payment_date: payment.created_at,
+            expected_payment_date: payment.expected_payment_date || undefined
           });
         }
       });
 
-      setCustomerDebts(Array.from(debtsMap.values()).sort((a, b) => b.total_debt - a.total_debt));
+      let sortedDebts = Array.from(debtsMap.values());
+      
+      // Sort based on selected filter
+      switch (debtSortBy) {
+        case 'oldest':
+          sortedDebts.sort((a, b) => {
+            if (!a.oldest_payment_date || !b.oldest_payment_date) return 0;
+            return new Date(a.oldest_payment_date).getTime() - new Date(b.oldest_payment_date).getTime();
+          });
+          break;
+        case 'expected':
+          sortedDebts.sort((a, b) => {
+            if (!a.expected_payment_date && !b.expected_payment_date) return 0;
+            if (!a.expected_payment_date) return 1;
+            if (!b.expected_payment_date) return -1;
+            return new Date(a.expected_payment_date).getTime() - new Date(b.expected_payment_date).getTime();
+          });
+          break;
+        default: // 'debt'
+          sortedDebts.sort((a, b) => b.total_debt - a.total_debt);
+      }
+
+      setCustomerDebts(sortedDebts);
     } catch (error) {
       toast({
         title: "Hata",
@@ -387,13 +428,29 @@ const Payments = () => {
       {/* Customer Debts */}
       <Card className="bg-white/80 backdrop-blur-sm border-brand-primary/20">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-brand-primary" />
-            Veresiye Müşteriler
-          </CardTitle>
-          <CardDescription>
-            Ödeme bekleyen müşterilerin borç listesi
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-brand-primary" />
+                Veresiye Müşteriler
+              </CardTitle>
+              <CardDescription>
+                Ödeme bekleyen müşterilerin borç listesi
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <select
+                value={debtSortBy}
+                onChange={(e) => setDebtSortBy(e.target.value as 'debt' | 'oldest' | 'expected')}
+                className="px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
+              >
+                <option value="debt">Borç Miktarına Göre</option>
+                <option value="oldest">En Eski Tarihe Göre</option>
+                <option value="expected">Beklenen Ödeme Tarihine Göre</option>
+              </select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {customerDebts.length > 0 ? (
@@ -407,6 +464,11 @@ const Payments = () => {
                     <div className="text-sm text-muted-foreground">
                       {debt.customer_phone} • {debt.appointment_count} randevu
                     </div>
+                    {debt.expected_payment_date && (
+                      <div className="text-sm text-blue-600 mt-1">
+                        Beklenen: {new Date(debt.expected_payment_date).toLocaleDateString('tr-TR')}
+                      </div>
+                    )}
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-orange-600">

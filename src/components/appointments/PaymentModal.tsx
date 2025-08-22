@@ -30,7 +30,8 @@ export const PaymentModal = ({
   const [formData, setFormData] = useState({
     amount: totalAmount,
     payment_method: "",
-    notes: ""
+    notes: "",
+    expected_payment_date: ""
   });
 
   const { toast } = useToast();
@@ -51,16 +52,21 @@ export const PaymentModal = ({
 
     try {
       // Create payment record
+      const paymentData = {
+        appointment_id: appointmentId,
+        amount: formData.amount,
+        payment_method: formData.payment_method,
+        payment_status: formData.payment_method === 'credit' ? 'pending' : 'completed',
+        payment_date: formData.payment_method === 'credit' ? null : new Date().toISOString(),
+        notes: formData.notes || null,
+        expected_payment_date: formData.payment_method === 'credit' && formData.expected_payment_date 
+          ? formData.expected_payment_date 
+          : null
+      };
+
       const { error } = await supabase
         .from('payments')
-        .insert([{
-          appointment_id: appointmentId,
-          amount: formData.amount,
-          payment_method: formData.payment_method,
-          payment_status: 'completed',
-          payment_date: new Date().toISOString(),
-          notes: formData.notes || null
-        }]);
+        .insert([paymentData]);
 
       if (error) throw error;
 
@@ -73,7 +79,8 @@ export const PaymentModal = ({
       setFormData({
         amount: totalAmount,
         payment_method: "",
-        notes: ""
+        notes: "",
+        expected_payment_date: ""
       });
 
       onSuccess();
@@ -132,6 +139,19 @@ export const PaymentModal = ({
               </SelectContent>
             </Select>
           </div>
+
+          {formData.payment_method === 'credit' && (
+            <div className="space-y-2">
+              <Label htmlFor="expected_payment_date">Ödemenin Alınacağı Tarih</Label>
+              <Input
+                id="expected_payment_date"
+                type="date"
+                value={formData.expected_payment_date}
+                onChange={(e) => setFormData({ ...formData, expected_payment_date: e.target.value })}
+                placeholder="Opsiyonel"
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notlar</Label>
