@@ -66,10 +66,10 @@ export const FeatureSection = () => {
     <section className="py-20 bg-white/30 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 font-playfair">
             İşletmenizi Büyütecek Özellikler
           </h2>
-          <p className="text-xl text-gray-700 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-700 max-w-2xl mx-auto font-inter">
             KendineGöre ile güzellik salonunuzun tüm süreçlerini dijitalleştirin ve verimliliğinizi artırın.
           </p>
         </div>

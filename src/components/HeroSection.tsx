@@ -16,13 +16,13 @@ export const HeroSection = () => {
       {/* Hero Content */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
         <div className="text-center">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-playfair font-bold text-gray-900 mb-6 leading-tight">
             Güzellik Salonunuz
             <br />
             için Modern CRM
           </h1>
           
-          <p className="text-xl md:text-2xl text-gray-800 mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-800 mb-8 max-w-3xl mx-auto leading-relaxed font-inter">
             Randevu yönetiminden müşteri takibine, ödemelerden raporlamaya 
             kadar salonunuzun tüm işlerini tek platformda yönetin.
           </p>
@@ -37,7 +37,7 @@ export const HeroSection = () => {
           </div>
 
           <div className="text-center mb-16">
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-gray-700 font-inter">
               💳 Kredi kartı gerektirmez • ⚡ Anında kurulum • 🔒 %100 güvenli
             </p>
           </div>
