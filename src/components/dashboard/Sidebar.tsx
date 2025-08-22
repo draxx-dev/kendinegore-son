@@ -107,8 +107,8 @@ export function DashboardSidebar() {
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarContent className="bg-white border-r border-border shadow-sm">
         {/* Header */}
-        <div className={`${collapsed ? 'py-4 px-2' : 'py-4 px-4'} border-b border-border h-[4rem] flex items-center`}>
-          <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
+        <div className={`${collapsed ? 'py-4 px-2' : 'py-[15px] px-4'} border-b border-border h-[4rem] flex items-center`}>
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} w-full`}>
             {!collapsed && (
               <div>
                 <h2 className="text-xl font-bold text-foreground">
@@ -121,7 +121,7 @@ export function DashboardSidebar() {
               variant="ghost" 
               size="icon" 
               onClick={() => toggleSidebar()}
-              className={`${collapsed ? '' : 'ml-auto'} h-8 w-8 hover:bg-secondary/50`}
+              className={`h-8 w-8 hover:bg-secondary/50 ${collapsed ? '' : 'flex-shrink-0'}`}
             >
               <Menu className="h-4 w-4" />
             </Button>
