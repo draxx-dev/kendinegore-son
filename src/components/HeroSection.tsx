@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 export const HeroSection = () => {
   const [currentText, setCurrentText] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const businessTypes = ["Güzellik Salonunuz", "Berberiniz", "Kuaförünüz"];
+  const businessTypes = ["Güzellik Salonunuz", "Berber Salonunuz", "Kuaför Salonunuz"];
 
   useEffect(() => {
     const interval = setInterval(() => {
