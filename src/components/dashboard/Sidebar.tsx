@@ -146,7 +146,7 @@ export function DashboardSidebar() {
                         className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                         title={collapsed ? item.title : undefined}
                       >
-                        <div className={`${collapsed ? 'p-2' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                        <div className={`${collapsed ? 'p-1' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
                           <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                         </div>
                         {!collapsed && (
