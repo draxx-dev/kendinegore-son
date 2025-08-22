@@ -416,13 +416,13 @@ const PublicBooking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {step === 0 ? (
           // Main Business Card
           <Card className="bg-white shadow-xl overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-6 shadow-elevated">
+            <div className="bg-gradient-to-r from-brand-primary to-brand-primary-dark text-white p-6 shadow-brand">
               <h1 className="text-xl font-bold text-center mb-4">{business.name}</h1>
               <div className="space-y-2 text-sm">
                 {business.phone && (
@@ -517,7 +517,7 @@ const PublicBooking = () => {
             <div className="p-6 pt-0">
               <Button 
                 onClick={() => setStep(1)} 
-                className="w-full bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 transition-all duration-300 text-white font-semibold py-3 shadow-lg hover:shadow-xl"
+                className="w-full bg-gradient-to-r from-brand-primary to-brand-primary-dark hover:from-brand-primary-light hover:to-brand-primary transition-all duration-300 text-white font-semibold py-3 shadow-brand hover:shadow-elevated"
                 size="lg"
               >
                 <CalendarIcon className="h-5 w-5 mr-2" />
