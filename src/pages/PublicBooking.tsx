@@ -422,7 +422,7 @@ const PublicBooking = () => {
           // Main Business Card
           <Card className="bg-white shadow-xl overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-primary text-white p-6 shadow-brand">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-6 shadow-elevated">
               <h1 className="text-xl font-bold text-center mb-4">{business.name}</h1>
               <div className="space-y-2 text-sm">
                 {business.phone && (
@@ -517,7 +517,7 @@ const PublicBooking = () => {
             <div className="p-6 pt-0">
               <Button 
                 onClick={() => setStep(1)} 
-                className="w-full bg-gradient-primary hover:shadow-brand transition-all duration-300 text-white font-semibold py-3 shadow-soft"
+                className="w-full bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 transition-all duration-300 text-white font-semibold py-3 shadow-lg hover:shadow-xl"
                 size="lg"
               >
                 <CalendarIcon className="h-5 w-5 mr-2" />
