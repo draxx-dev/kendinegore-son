@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, Plus, Clock, User, Scissors, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { CreateAppointmentModal } from "@/components/appointments/CreateAppointmentModal";
 
 interface Appointment {
   id: string;
@@ -33,6 +34,7 @@ const Appointments = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { toast } = useToast();
 
@@ -185,7 +187,11 @@ const Appointments = () => {
             Randevularınızı takvim görünümünde yönetin.
           </p>
         </div>
-        <Button variant="brand" className="flex items-center gap-2">
+        <Button 
+          onClick={() => setShowCreateModal(true)}
+          variant="brand" 
+          className="flex items-center gap-2"
+        >
           <Plus className="h-4 w-4" />
           Yeni Randevu
         </Button>
@@ -330,7 +336,10 @@ const Appointments = () => {
             <p className="text-muted-foreground text-center mb-4">
               Yeni randevu oluşturmak için yukarıdaki butonu kullanabilirsiniz.
             </p>
-            <Button variant="brand">
+            <Button 
+              onClick={() => setShowCreateModal(true)}
+              variant="brand"
+            >
               <Plus className="h-4 w-4 mr-2" />
               İlk Randevuyu Oluştur
             </Button>
@@ -366,6 +375,13 @@ const Appointments = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Create Appointment Modal */}
+      <CreateAppointmentModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onSuccess={fetchAppointments}
+      />
     </div>
   );
 };

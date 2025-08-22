@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { WorkingHoursModal } from "@/components/staff/WorkingHoursModal";
 import { 
   Plus, 
   Edit, 
@@ -35,6 +36,8 @@ const Staff = () => {
   const [loading, setLoading] = useState(true);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [showNewStaffForm, setShowNewStaffForm] = useState(false);
+  const [showWorkingHoursModal, setShowWorkingHoursModal] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -203,6 +206,11 @@ const Staff = () => {
   const cancelEdit = () => {
     setEditingStaff(null);
     setFormData({ name: "", email: "", phone: "", specialties: "", profile_image_url: "" });
+  };
+
+  const handleWorkingHoursClick = (staffMember: Staff) => {
+    setSelectedStaff(staffMember);
+    setShowWorkingHoursModal(true);
   };
 
   if (loading) {
@@ -434,9 +442,11 @@ const Staff = () => {
                         Düzenle
                       </Button>
                       <Button 
+                        onClick={() => handleWorkingHoursClick(staffMember)}
                         size="sm" 
                         variant="outline"
                         className="text-muted-foreground hover:text-brand-primary"
+                        title="Çalışma Saatleri"
                       >
                         <Clock className="h-4 w-4" />
                       </Button>
@@ -476,6 +486,16 @@ const Staff = () => {
             </Button>
           </CardContent>
         </Card>
+      )}
+
+      {/* Working Hours Modal */}
+      {selectedStaff && (
+        <WorkingHoursModal
+          open={showWorkingHoursModal}
+          onOpenChange={setShowWorkingHoursModal}
+          staffId={selectedStaff.id}
+          staffName={selectedStaff.name}
+        />
       )}
     </div>
   );

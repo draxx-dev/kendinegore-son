@@ -7,6 +7,8 @@ import Staff from "./dashboard/Staff";
 import Appointments from "./dashboard/Appointments";
 import Customers from "./dashboard/Customers";
 import Payments from "./dashboard/Payments";
+import Settings from "./dashboard/Settings";
+import BusinessDetails from "./dashboard/BusinessDetails";
 
 const Dashboard = () => {
   return (
@@ -19,6 +21,8 @@ const Dashboard = () => {
         <Route path="/appointments/*" element={<Appointments />} />
         <Route path="/customers/*" element={<Customers />} />
         <Route path="/payments" element={<Payments />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/business-details" element={<BusinessDetails />} />
       </Routes>
     </DashboardLayout>
   );
