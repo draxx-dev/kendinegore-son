@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar, Users, TrendingUp, Star, CreditCard, Zap, Lock } from "lucide-react";
+import { Calendar, Users, TrendingUp, Star, CreditCard, Zap, Lock, PartyPopper } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const HeroSection = () => {
@@ -88,8 +88,9 @@ export const HeroSection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Button size="lg" className="text-lg px-12 py-6 bg-gray-900 hover:bg-gray-800 text-white shadow-lg transform hover:scale-105 transition-all duration-300">
-              🎉 14 Gün Ücretsiz Deneyin
+            <Button size="lg" className="text-lg px-12 py-6 bg-white/70 backdrop-blur-xl border-white/30 hover:bg-white/80 text-gray-900 shadow-lg transform hover:scale-105 transition-all duration-300 font-inter">
+              <PartyPopper className="w-5 h-5 mr-2" />
+              14 Gün Ücretsiz Deneyin
             </Button>
             <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white shadow-lg transition-all duration-300">
               Demo İzleyin
