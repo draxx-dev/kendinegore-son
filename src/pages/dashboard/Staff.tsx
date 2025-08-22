@@ -43,7 +43,7 @@ const Staff = () => {
     email: "",
     phone: "",
     specialties: "",
-    profile_image_url: ""
+    profileImage: null as File | null
   });
 
   const { toast } = useToast();
@@ -102,13 +102,36 @@ const Staff = () => {
     try {
       const businessId = await getBusinessId();
       
+      let profileImageUrl = null;
+      
+      // Upload profile image if provided
+      if (formData.profileImage) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Kullanıcı bulunamadı");
+
+        const fileExt = formData.profileImage.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('staff-avatars')
+          .upload(fileName, formData.profileImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('staff-avatars')
+          .getPublicUrl(fileName);
+
+        profileImageUrl = publicUrl;
+      }
+      
       const { error } = await supabase
         .from('staff')
         .insert([{
           name: formData.name,
           email: formData.email || null,
           phone: formData.phone || null,
-          profile_image_url: formData.profile_image_url || null,
+          profile_image_url: profileImageUrl,
           specialties: formData.specialties ? formData.specialties.split(',').map(s => s.trim()) : null,
           business_id: businessId,
           is_active: true
@@ -121,7 +144,7 @@ const Staff = () => {
         description: "Yeni personel eklendi.",
       });
 
-      setFormData({ name: "", email: "", phone: "", specialties: "", profile_image_url: "" });
+      setFormData({ name: "", email: "", phone: "", specialties: "", profileImage: null });
       setShowNewStaffForm(false);
       fetchStaff();
     } catch (error) {
@@ -137,13 +160,36 @@ const Staff = () => {
     if (!editingStaff) return;
 
     try {
+      let profileImageUrl = editingStaff.profile_image_url;
+      
+      // Upload new profile image if provided
+      if (formData.profileImage) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Kullanıcı bulunamadı");
+
+        const fileExt = formData.profileImage.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('staff-avatars')
+          .upload(fileName, formData.profileImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('staff-avatars')
+          .getPublicUrl(fileName);
+
+        profileImageUrl = publicUrl;
+      }
+
       const { error } = await supabase
         .from('staff')
         .update({
           name: formData.name,
           email: formData.email || null,
           phone: formData.phone || null,
-          profile_image_url: formData.profile_image_url || null,
+          profile_image_url: profileImageUrl,
           specialties: formData.specialties ? formData.specialties.split(',').map(s => s.trim()) : null,
         })
         .eq('id', editingStaff.id);
@@ -199,13 +245,13 @@ const Staff = () => {
       email: staffMember.email || "",
       phone: staffMember.phone || "",
       specialties: staffMember.specialties?.join(', ') || "",
-      profile_image_url: staffMember.profile_image_url || ""
+      profileImage: null
     });
   };
 
   const cancelEdit = () => {
     setEditingStaff(null);
-    setFormData({ name: "", email: "", phone: "", specialties: "", profile_image_url: "" });
+    setFormData({ name: "", email: "", phone: "", specialties: "", profileImage: null });
   };
 
   const handleWorkingHoursClick = (staffMember: Staff) => {
@@ -291,13 +337,12 @@ const Staff = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="profile_image_url">Profil Fotoğrafı URL</Label>
+                <Label htmlFor="profile_image">Profil Fotoğrafı</Label>
                 <Input
-                  id="profile_image_url"
-                  name="profile_image_url"
-                  placeholder="https://example.com/photo.jpg"
-                  value={formData.profile_image_url}
-                  onChange={handleInputChange}
+                  id="profile_image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFormData({ ...formData, profileImage: e.target.files?.[0] || null })}
                 />
               </div>
             </div>
@@ -322,7 +367,7 @@ const Staff = () => {
               <Button 
                 onClick={() => {
                   setShowNewStaffForm(false);
-                  setFormData({ name: "", email: "", phone: "", specialties: "", profile_image_url: "" });
+                  setFormData({ name: "", email: "", phone: "", specialties: "", profileImage: null });
                 }}
                 variant="outline"
               >

@@ -42,7 +42,7 @@ const BusinessDetails = () => {
   const [images, setImages] = useState<BusinessImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [newImage, setNewImage] = useState({
-    url: "",
+    file: null as File | null,
     title: "",
     description: ""
   });
@@ -68,21 +68,8 @@ const BusinessDetails = () => {
       if (businessError) throw businessError;
       setBusiness(businessData);
 
-      // Mock portfolio images (you can later integrate with Supabase Storage)
-      setImages([
-        {
-          id: "1",
-          url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400",
-          title: "Salon İç Mekan",
-          description: "Modern ve şık salon tasarımımız"
-        },
-        {
-          id: "2", 
-          url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400",
-          title: "Saç Kesim Örnekleri",
-          description: "Uzman ekibimizin çalışma örnekleri"
-        }
-      ]);
+      // Fetch portfolio images from Supabase Storage
+      await fetchPortfolioImages(user.id);
     } catch (error) {
       toast({
         title: "Hata",
@@ -91,6 +78,37 @@ const BusinessDetails = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPortfolioImages = async (userId: string) => {
+    try {
+      const { data: files, error } = await supabase.storage
+        .from('business-portfolio')
+        .list(userId, {
+          limit: 100,
+          offset: 0
+        });
+
+      if (error) throw error;
+
+      const imagePromises = files?.map(async (file) => {
+        const { data: { publicUrl } } = supabase.storage
+          .from('business-portfolio')
+          .getPublicUrl(`${userId}/${file.name}`);
+        
+        return {
+          id: file.name,
+          url: publicUrl,
+          title: file.name.split('.')[0].replace(/[-_]/g, ' '),
+          description: ""
+        };
+      }) || [];
+
+      const imageResults = await Promise.all(imagePromises);
+      setImages(imageResults);
+    } catch (error) {
+      console.error('Portfolio resimleri yüklenirken hata:', error);
     }
   };
 
@@ -125,37 +143,82 @@ const BusinessDetails = () => {
     }
   };
 
-  const handleAddImage = () => {
-    if (!newImage.url || !newImage.title) {
+  const handleAddImage = async () => {
+    if (!newImage.file || !newImage.title) {
       toast({
         title: "Hata",
-        description: "URL ve başlık alanları zorunludur.",
+        description: "Dosya ve başlık alanları zorunludur.",
         variant: "destructive",
       });
       return;
     }
 
-    const newImageObj: BusinessImage = {
-      id: Date.now().toString(),
-      ...newImage
-    };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Kullanıcı bulunamadı");
 
-    setImages([...images, newImageObj]);
-    setNewImage({ url: "", title: "", description: "" });
-    setShowAddImage(false);
+      const fileExt = newImage.file.name.split('.').pop();
+      const fileName = `${newImage.title.replace(/\s+/g, '-')}-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
-    toast({
-      title: "Başarılı!",
-      description: "Resim portföye eklendi.",
-    });
+      const { error: uploadError } = await supabase.storage
+        .from('business-portfolio')
+        .upload(filePath, newImage.file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('business-portfolio')
+        .getPublicUrl(filePath);
+
+      const newImageObj: BusinessImage = {
+        id: fileName,
+        url: publicUrl,
+        title: newImage.title,
+        description: newImage.description
+      };
+
+      setImages([...images, newImageObj]);
+      setNewImage({ file: null, title: "", description: "" });
+      setShowAddImage(false);
+
+      toast({
+        title: "Başarılı!",
+        description: "Resim portföye eklendi.",
+      });
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Resim yüklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleRemoveImage = (imageId: string) => {
-    setImages(images.filter(img => img.id !== imageId));
-    toast({
-      title: "Başarılı!",
-      description: "Resim portföyden kaldırıldı.",
-    });
+  const handleRemoveImage = async (imageId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Kullanıcı bulunamadı");
+
+      const filePath = `${user.id}/${imageId}`;
+      const { error } = await supabase.storage
+        .from('business-portfolio')
+        .remove([filePath]);
+
+      if (error) throw error;
+
+      setImages(images.filter(img => img.id !== imageId));
+      toast({
+        title: "Başarılı!",
+        description: "Resim portföyden kaldırıldı.",
+      });
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Resim silinirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -332,12 +395,12 @@ const BusinessDetails = () => {
             <Card className="mb-6 bg-brand-accent/10">
               <CardContent className="p-4 space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="image_url">Resim URL</Label>
+                  <Label htmlFor="image_file">Resim Dosyası</Label>
                   <Input
-                    id="image_url"
-                    value={newImage.url}
-                    onChange={(e) => setNewImage({ ...newImage, url: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
+                    id="image_file"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setNewImage({ ...newImage, file: e.target.files?.[0] || null })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -365,7 +428,10 @@ const BusinessDetails = () => {
                     Ekle
                   </Button>
                   <Button 
-                    onClick={() => setShowAddImage(false)} 
+                    onClick={() => {
+                      setShowAddImage(false);
+                      setNewImage({ file: null, title: "", description: "" });
+                    }} 
                     variant="outline" 
                     size="sm"
                   >
