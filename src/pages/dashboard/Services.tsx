@@ -83,18 +83,18 @@ const Services = () => {
         .from('businesses')
         .select('id')
         .eq('owner_id', user.id)
-        .limit(1);
+        .maybeSingle();
 
       if (businessError) throw businessError;
-      if (!businesses || businesses.length === 0) {
-        throw new Error("İşletme bulunamadı. Önce işletmenizi kaydetmelisiniz.");
+      if (!businesses) {
+        throw new Error("İşletme bulunamadı. Lütfen sayfayı yenileyin.");
       }
 
       const { error } = await supabase
         .from('services')
         .insert([{
           ...formData,
-          business_id: businesses[0].id,
+          business_id: businesses.id,
           is_active: true
         }]);
 

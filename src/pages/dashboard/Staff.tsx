@@ -85,14 +85,14 @@ const Staff = () => {
       .from('businesses')
       .select('id')
       .eq('owner_id', user.id)
-      .limit(1);
+      .maybeSingle();
 
     if (error) throw error;
-    if (!businesses || businesses.length === 0) {
-      throw new Error("İşletme bulunamadı");
+    if (!businesses) {
+      throw new Error("İşletme bulunamadı. Lütfen sayfayı yenileyin.");
     }
 
-    return businesses[0].id;
+    return businesses.id;
   };
 
   const handleCreateStaff = async () => {
