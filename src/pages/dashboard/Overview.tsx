@@ -186,39 +186,39 @@ const Overview = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold text-foreground mb-3 bg-gradient-primary bg-clip-text text-transparent">
           İyi günler! 👋
         </h1>
-        <p className="text-muted-foreground">
-          Salon yönetim panelinize hoş geldiniz. İşletmenizi buradan yönetebilirsiniz.
+        <p className="text-lg text-muted-foreground max-w-2xl">
+          Salon yönetim panelinize hoş geldiniz. İşletmenizi profesyonelce yönetmek için ihtiyacınız olan her şey burada.
         </p>
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Hızlı İşlemler</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-10">
+        <h2 className="text-2xl font-bold text-foreground mb-6">Hızlı İşlemler</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {quickActions.map((action, index) => (
-            <Card key={index} className="hover:shadow-soft transition-all duration-300 hover:-translate-y-1 bg-white/80 backdrop-blur-sm border-brand-primary/10">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-brand-primary/10 rounded-lg">
-                    <action.icon className="h-5 w-5 text-brand-primary" />
+            <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-2 bg-white border-border/50 hover:border-primary/20">
+              <CardHeader className="pb-4">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors duration-300">
+                    <action.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <div>
-                    <CardTitle className="text-base">{action.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
+                  <div className="flex-1">
+                    <CardTitle className="text-lg font-semibold mb-1">{action.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{action.description}</p>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <Button 
                   variant={action.variant} 
-                  size="sm" 
-                  className="w-full"
+                  size="default" 
+                  className="w-full font-medium"
                   asChild
                 >
                   <Link to={action.href}>
@@ -232,31 +232,35 @@ const Overview = () => {
       </div>
 
       {/* Dashboard Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {dashboardItems.map((item, index) => (
-          <Card key={index} className="hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 bg-white/50 backdrop-blur-sm border-brand-primary/10">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <div>
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {item.title}
-                </CardTitle>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-2xl font-bold text-foreground">
-                    {item.value}
-                  </span>
-                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3" />
-                    {item.change}
-                  </span>
+          <Card key={index} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white border-border/50 hover:border-primary/20 overflow-hidden">
+            <CardHeader className="pb-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    {item.title}
+                  </CardTitle>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-3xl font-bold text-foreground">
+                      {item.value}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
+                      <TrendingUp className="h-3 w-3" />
+                      {item.change}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-3 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-all duration-300">
+                  <item.icon className="h-6 w-6 text-primary" />
                 </div>
               </div>
-              <item.icon className="h-8 w-8 text-brand-primary" />
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                 {item.description}
               </p>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" className="w-full group-hover:border-primary/50" asChild>
                 <Link to={item.href}>
                   Detay Gör
                 </Link>
@@ -267,12 +271,14 @@ const Overview = () => {
       </div>
 
       {/* Recent Activity & Quick Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Bugünkü Randevular */}
-        <Card className="bg-white/50 backdrop-blur-sm border-brand-primary/10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-brand-primary" />
+        <Card className="bg-white border-border/50 shadow-sm hover:shadow-lg transition-all duration-300">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 text-xl font-bold">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
               Bugünkü Randevular
             </CardTitle>
           </CardHeader>
@@ -324,10 +330,12 @@ const Overview = () => {
         </Card>
 
         {/* Haftalık Özet */}
-        <Card className="bg-white/50 backdrop-blur-sm border-brand-primary/10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-brand-primary" />
+        <Card className="bg-white border-border/50 shadow-sm hover:shadow-lg transition-all duration-300">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 text-xl font-bold">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-primary" />
+              </div>
               Bu Hafta Özeti
             </CardTitle>
           </CardHeader>

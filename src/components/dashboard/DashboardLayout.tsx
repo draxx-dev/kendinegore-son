@@ -69,12 +69,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-gradient-subtle">
+      <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar />
         
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="bg-white/80 backdrop-blur-sm border-b border-brand-primary/10 sticky top-0 z-40">
+          <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm">
             <div className="flex justify-between items-center h-16 px-6">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="lg:hidden" />
@@ -88,14 +88,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-muted-foreground hidden sm:block">
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-muted-foreground hidden sm:block px-3 py-1.5 bg-secondary rounded-full">
                   Hoş geldiniz, {user.user_metadata?.first_name || user.email}
                 </span>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" className="hover:bg-secondary">
                   <Settings className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
                   <LogOut className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">Çıkış</span>
                 </Button>
@@ -104,8 +104,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 p-6">
-            {children}
+          <main className="flex-1 p-8 bg-slate-50/50">
+            <div className="max-w-7xl mx-auto">
+              {children}
+            </div>
           </main>
         </div>
       </div>

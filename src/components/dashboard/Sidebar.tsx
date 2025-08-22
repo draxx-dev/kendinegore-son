@@ -99,34 +99,34 @@ export function DashboardSidebar() {
 
   const getNavClassName = (isActiveRoute: boolean) =>
     isActiveRoute 
-      ? "bg-brand-primary/10 text-brand-primary font-medium border-r-2 border-brand-primary" 
-      : "hover:bg-brand-accent hover:text-brand-primary-dark transition-colors";
+      ? "bg-primary/5 text-primary shadow-sm border-l-4 border-primary" 
+      : "hover:bg-secondary/50 hover:shadow-sm";
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
-      <SidebarContent className="bg-white border-r border-brand-primary/10">
+    <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon">
+      <SidebarContent className="bg-white border-r border-border shadow-sm">
         {/* Header */}
-        <div className="p-4 border-b border-brand-primary/10">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between">
             {!collapsed && (
-              <h2 className="text-lg font-bold bg-gradient-primary bg-clip-text text-transparent">
-                KendineGöre
-              </h2>
+              <div>
+                <h2 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  KendineGöre
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1 font-medium">Yönetim Paneli</p>
+              </div>
             )}
-            <SidebarTrigger className="ml-auto" />
+            <SidebarTrigger className="ml-auto h-8 w-8 hover:bg-secondary" />
           </div>
-          {!collapsed && (
-            <p className="text-sm text-muted-foreground mt-1">Yönetim Paneli</p>
-          )}
         </div>
 
         {/* Navigation */}
-        <SidebarGroup className="flex-1">
-          <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            {!collapsed && "Menü"}
+        <SidebarGroup className="flex-1 py-4">
+          <SidebarGroupLabel className="px-6 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            {!collapsed && "Ana Menü"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1 px-2">
+            <SidebarMenu className="space-y-2 px-4">
               {navigationItems.map((item) => {
                 const isActiveRoute = isActive(item.url);
                 return (
@@ -135,13 +135,15 @@ export function DashboardSidebar() {
                       <NavLink 
                         to={item.url} 
                         end={item.url === "/dashboard"}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${getNavClassName(isActiveRoute)}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                         title={collapsed ? item.title : undefined}
                       >
-                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                        <div className={`p-2 rounded-lg transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                        </div>
                         {!collapsed && (
                           <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium truncate block">
+                            <span className="text-sm font-semibold truncate block">
                               {item.title}
                             </span>
                             <span className="text-xs text-muted-foreground truncate block">
@@ -159,37 +161,45 @@ export function DashboardSidebar() {
         </SidebarGroup>
 
         {/* Business Management */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <SidebarGroup className="py-4">
+          <SidebarGroupLabel className="px-6 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
             {!collapsed && "İşletme Yönetimi"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1 px-2">
+            <SidebarMenu className="space-y-2 px-4">
               {/* Business Details with Expandable Submenu */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <div 
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer group ${
                       businessItems.some(item => isActive(item.url)) 
-                        ? "bg-brand-primary/10 text-brand-primary font-medium border-r-2 border-brand-primary" 
-                        : "hover:bg-brand-accent hover:text-brand-primary-dark"
+                        ? "bg-primary/5 text-primary shadow-sm border-l-4 border-primary" 
+                        : "hover:bg-secondary/50 hover:shadow-sm"
                     }`}
                     onClick={() => !collapsed && setBusinessExpanded(!businessExpanded)}
                     title={collapsed ? "İşletme Yönetimi" : undefined}
                   >
-                    <Building className="h-5 w-5 flex-shrink-0" />
+                    <div className={`p-2 rounded-lg transition-colors ${
+                      businessItems.some(item => isActive(item.url)) 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-secondary group-hover:bg-primary/10'
+                    }`}>
+                      <Building className="h-4 w-4 flex-shrink-0" />
+                    </div>
                     {!collapsed && (
                       <>
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium truncate block">
+                          <span className="text-sm font-semibold truncate block">
                             İşletme Yönetimi
                           </span>
                         </div>
-                        {businessExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
+                        <div className="transition-transform duration-200">
+                          {businessExpanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </div>
                       </>
                     )}
                   </div>
@@ -197,30 +207,36 @@ export function DashboardSidebar() {
               </SidebarMenuItem>
 
               {/* Submenu Items */}
-              {(!collapsed && businessExpanded) && businessItems.map((item) => {
-                const isActiveRoute = isActive(item.url);
-                return (
-                  <SidebarMenuItem key={item.title} className="ml-4">
-                    <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={item.url} 
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${getNavClassName(isActiveRoute)}`}
-                        title={item.title}
-                      >
-                        <item.icon className="h-4 w-4 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium truncate block">
-                            {item.title}
-                          </span>
-                          <span className="text-xs text-muted-foreground truncate block">
-                            {item.description}
-                          </span>
-                        </div>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {(!collapsed && businessExpanded) && (
+                <div className="ml-4 space-y-1 border-l-2 border-secondary pl-4">
+                  {businessItems.map((item) => {
+                    const isActiveRoute = isActive(item.url);
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild>
+                          <NavLink 
+                            to={item.url} 
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
+                            title={item.title}
+                          >
+                            <div className={`p-1.5 rounded-md transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary/50 group-hover:bg-primary/10'}`}>
+                              <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium truncate block">
+                                {item.title}
+                              </span>
+                              <span className="text-xs text-muted-foreground truncate block">
+                                {item.description}
+                              </span>
+                            </div>
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Collapsed State - Show as Individual Items */}
               {collapsed && businessItems.map((item) => {
@@ -230,10 +246,12 @@ export function DashboardSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink 
                         to={item.url} 
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${getNavClassName(isActiveRoute)}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                         title={item.title}
                       >
-                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                        <div className={`p-2 rounded-lg transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                        </div>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -244,17 +262,19 @@ export function DashboardSidebar() {
         </SidebarGroup>
 
         {/* Settings */}
-        <div className="p-4 border-t border-brand-primary/10">
+        <div className="p-6 border-t border-border">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <NavLink 
                   to="/dashboard/settings" 
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-brand-accent hover:text-brand-primary-dark transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/50 hover:shadow-sm transition-all duration-300 group"
                   title={collapsed ? "Ayarlar" : undefined}
                 >
-                  <Settings className="h-5 w-5 flex-shrink-0" />
-                  {!collapsed && <span className="text-sm font-medium">Ayarlar</span>}
+                  <div className="p-2 rounded-lg bg-secondary group-hover:bg-primary/10 transition-colors">
+                    <Settings className="h-4 w-4 flex-shrink-0" />
+                  </div>
+                  {!collapsed && <span className="text-sm font-semibold">Ayarlar</span>}
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
