@@ -21,7 +21,7 @@ All colors MUST be HSL.
     
     /* Fresh 2025 Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(180 100% 80%), hsl(300 100% 85%));
-    --gradient-hero: linear-gradient(135deg, hsl(180 100% 85% / 0.95), hsl(60 100% 90% / 0.9), hsl(300 100% 90% / 0.95));
+    --gradient-hero: linear-gradient(135deg, hsl(180 80% 85%), hsl(195 100% 88%), hsl(280 70% 85%), hsl(320 70% 80%));
     --gradient-subtle: linear-gradient(180deg, hsl(180 100% 95% / 0.3), hsl(300 100% 95% / 0.2));
     
     /* Shadows */
