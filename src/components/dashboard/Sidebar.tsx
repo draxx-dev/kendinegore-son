@@ -104,7 +104,7 @@ export function DashboardSidebar() {
       : "hover:bg-secondary/30";
 
   return (
-    <Sidebar className={collapsed ? "w-20" : "w-80"} collapsible="icon">
+    <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarContent className="bg-white border-r border-border shadow-sm">
         {/* Header */}
         <div className="p-4 border-b border-border">
