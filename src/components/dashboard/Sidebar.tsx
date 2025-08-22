@@ -101,7 +101,7 @@ export function DashboardSidebar() {
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarContent className="bg-white border-r border-border shadow-sm">
         {/* Header */}
-        <div className={`${collapsed ? 'py-2 px-1' : 'py-[20px] px-3'} border-b border-border h-[4rem] flex items-center mb-px`}>
+        <div className={`${collapsed ? 'py-2 px-1' : 'py-[50px] px-3'} border-b border-border h-[4rem] flex items-center mb-px`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} w-full`}>
             {!collapsed && (
               <div>
