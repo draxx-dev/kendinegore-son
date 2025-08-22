@@ -4,6 +4,17 @@ import { Calendar, Users, TrendingUp, Star, CreditCard, Zap, Lock, PartyPopper }
 import { useEffect, useState } from "react";
 
 export const HeroSection = () => {
+  const [currentText, setCurrentText] = useState(0);
+  const businessTypes = ["Güzellik Salonunuz", "Berberiniz", "Kuaförünüz"];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentText((prev) => (prev + 1) % businessTypes.length);
+    }, 3000); // Her 3 saniyede bir değiş
+
+    return () => clearInterval(interval);
+  }, []);
+
   const stats = [
     { number: "1,000+", label: "Mutlu İşletme", icon: Star, targetValue: 1000 },
     { number: "50,000+", label: "Randevu Tamamlandı", icon: Calendar, targetValue: 50000 },
@@ -77,7 +88,9 @@ export const HeroSection = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-playfair font-bold text-gray-900 mb-6 leading-tight">
-            Güzellik Salonunuz
+            <span className="inline-block transition-all duration-500 ease-in-out transform">
+              {businessTypes[currentText]}
+            </span>
             <br />
             için Modern CRM
           </h1>
@@ -91,9 +104,6 @@ export const HeroSection = () => {
             <Button size="lg" className="text-lg px-12 py-6 bg-white/70 backdrop-blur-xl border-white/30 hover:bg-white/80 text-gray-900 shadow-lg transform hover:scale-105 transition-all duration-300 font-inter">
               <PartyPopper className="w-5 h-5 mr-2" />
               14 Gün Ücretsiz Deneyin
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white shadow-lg transition-all duration-300">
-              Demo İzleyin
             </Button>
           </div>
 
