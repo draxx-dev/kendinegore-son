@@ -120,7 +120,7 @@ export function DashboardSidebar() {
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={toggleSidebar}
+              onClick={() => toggleSidebar()}
               className={`${collapsed ? '' : 'ml-auto'} h-8 w-8 hover:bg-secondary/50`}
             >
               <Menu className="h-4 w-4" />
