@@ -134,7 +134,7 @@ export function DashboardSidebar() {
             {!collapsed && "Ana Menü"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2 px-2">
+            <SidebarMenu className="space-y-2 px-1">
               {navigationItems.map((item) => {
                 const isActiveRoute = isActive(item.url);
                 return (
@@ -174,7 +174,7 @@ export function DashboardSidebar() {
             {!collapsed && "İşletme Yönetimi"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2 px-2">
+            <SidebarMenu className="space-y-2 px-1">
               {/* Business Details with Expandable Submenu */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
@@ -272,7 +272,7 @@ export function DashboardSidebar() {
         </SidebarGroup>
 
         {/* Settings */}
-        <div className="p-4 border-t border-border">
+        <div className="px-3 border-t border-border">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
