@@ -59,9 +59,6 @@ const navigationItems = [
     icon: CreditCard,
     description: "Finansal takip ve raporlar"
   },
-];
-
-const businessItems = [
   { 
     title: "İşletme Detayları", 
     url: "/dashboard/business-details", 
@@ -87,9 +84,6 @@ export function DashboardSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
-  const [businessExpanded, setBusinessExpanded] = useState(
-    businessItems.some(item => currentPath.startsWith(item.url.split('/*')[0]))
-  );
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -168,117 +162,14 @@ export function DashboardSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Business Management */}
-        <SidebarGroup className="py-4">
-          <SidebarGroupLabel className="px-6 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            {!collapsed && "İşletme Yönetimi"}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-2 px-1">
-              {/* Business Details with Expandable Submenu */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                   <div 
-                     className={`flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 cursor-pointer group ${
-                       businessItems.some(item => isActive(item.url)) 
-                         ? "text-primary" 
-                         : "hover:bg-secondary/30"
-                     }`}
-                     onClick={() => !collapsed && setBusinessExpanded(!businessExpanded)}
-                     title={collapsed ? "İşletme Yönetimi" : undefined}
-                   >
-                    <div className={`${collapsed ? 'p-2' : 'p-2'} rounded-lg transition-colors ${
-                      businessItems.some(item => isActive(item.url)) 
-                        ? 'text-primary' 
-                        : 'bg-secondary group-hover:bg-primary/10'
-                    }`}>
-                      <Building className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${
-                        businessItems.some(item => isActive(item.url)) ? 'text-primary' : ''
-                      }`} />
-                    </div>
-                    {!collapsed && (
-                      <>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-sm font-semibold truncate block">
-                            İşletme Yönetimi
-                          </span>
-                        </div>
-                        <div className="transition-transform duration-200">
-                          {businessExpanded ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Submenu Items */}
-              {(!collapsed && businessExpanded) && (
-                <div className="ml-4 space-y-1 border-l-2 border-secondary pl-4">
-                  {businessItems.map((item) => {
-                    const isActiveRoute = isActive(item.url);
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild>
-                          <NavLink 
-                            to={item.url} 
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
-                            title={item.title}
-                          >
-                            <div className={`p-1.5 rounded-md transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary/50 group-hover:bg-primary/10'}`}>
-                              <item.icon className={`h-3.5 w-3.5 flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm font-medium truncate block">
-                                {item.title}
-                              </span>
-                              <span className="text-xs text-muted-foreground truncate block">
-                                {item.description}
-                              </span>
-                            </div>
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Collapsed State - Show as Individual Items */}
-              {collapsed && businessItems.map((item) => {
-                const isActiveRoute = isActive(item.url);
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                        <NavLink 
-                          to={item.url} 
-                          className={`flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
-                          title={item.title}
-                        >
-                        <div className={`${collapsed ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
-                        </div>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         {/* Settings */}
-        <div className="px-3 border-t border-border pt-2">
+        <div className="px-3 border-t border-border pt-1">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                  <NavLink 
                    to="/dashboard/settings" 
-                   className={({isActive}) => `flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
+                   className={({isActive}) => `flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
                    title={collapsed ? "Ayarlar" : undefined}
                  >
                   {({isActive}) => (
