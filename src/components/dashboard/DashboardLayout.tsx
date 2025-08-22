@@ -104,7 +104,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 p-8 bg-slate-50/50">
+          <main className="flex-1 p-6 bg-slate-50/50 min-w-0">
             <div className="max-w-7xl mx-auto">
               {children}
             </div>

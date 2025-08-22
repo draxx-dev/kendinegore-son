@@ -103,11 +103,11 @@ export function DashboardSidebar() {
       : "hover:bg-secondary/30 hover:border-r-2 hover:border-border";
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon">
+    <Sidebar className={collapsed ? "w-20" : "w-80"} collapsible="icon">
       <SidebarContent className="bg-white border-r border-border shadow-sm">
         {/* Header */}
         <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
             {!collapsed && (
               <div>
                 <h2 className="text-xl font-bold text-foreground">
@@ -116,7 +116,7 @@ export function DashboardSidebar() {
                 <p className="text-sm text-muted-foreground mt-1">Yönetim Paneli</p>
               </div>
             )}
-            <SidebarTrigger className="ml-auto h-8 w-8 hover:bg-secondary/50" />
+            <SidebarTrigger className={`${collapsed ? '' : 'ml-auto'} h-8 w-8 hover:bg-secondary/50`} />
           </div>
         </div>
 
@@ -138,8 +138,8 @@ export function DashboardSidebar() {
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                         title={collapsed ? item.title : undefined}
                       >
-                        <div className={`p-2 rounded-lg transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                        <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0`} />
                         </div>
                         {!collapsed && (
                           <div className="flex-1 min-w-0">
@@ -179,12 +179,12 @@ export function DashboardSidebar() {
                     onClick={() => !collapsed && setBusinessExpanded(!businessExpanded)}
                     title={collapsed ? "İşletme Yönetimi" : undefined}
                   >
-                    <div className={`p-2 rounded-lg transition-colors ${
+                    <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${
                       businessItems.some(item => isActive(item.url)) 
                         ? 'bg-primary text-primary-foreground' 
                         : 'bg-secondary group-hover:bg-primary/10'
                     }`}>
-                      <Building className="h-4 w-4 flex-shrink-0" />
+                      <Building className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0`} />
                     </div>
                     {!collapsed && (
                       <>
@@ -249,8 +249,8 @@ export function DashboardSidebar() {
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                         title={item.title}
                       >
-                        <div className={`p-2 rounded-lg transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                        <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0`} />
                         </div>
                       </NavLink>
                     </SidebarMenuButton>
@@ -273,8 +273,8 @@ export function DashboardSidebar() {
                 >
                   {({isActive}) => (
                     <>
-                      <div className={`p-2 rounded-lg transition-colors ${isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                        <Settings className="h-4 w-4 flex-shrink-0" />
+                      <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                        <Settings className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0`} />
                       </div>
                       {!collapsed && <span className="text-sm font-semibold">Ayarlar</span>}
                     </>
