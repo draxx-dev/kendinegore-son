@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar, Users, TrendingUp, Star } from "lucide-react";
+import { Calendar, Users, TrendingUp, Star, CreditCard, Zap, Lock } from "lucide-react";
 
 export const HeroSection = () => {
   const stats = [
@@ -37,9 +37,20 @@ export const HeroSection = () => {
           </div>
 
           <div className="text-center mb-16">
-            <p className="text-sm text-gray-700 font-inter">
-              💳 Kredi kartı gerektirmez • ⚡ Anında kurulum • 🔒 %100 güvenli
-            </p>
+            <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-gray-700 font-inter">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                <span>Kredi kartı gerektirmez</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                <span>Anında kurulum</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                <span>%100 güvenli</span>
+              </div>
+            </div>
           </div>
 
           {/* Stats */}
