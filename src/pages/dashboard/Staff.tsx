@@ -31,18 +31,24 @@ interface Staff {
   is_active: boolean;
 }
 
+interface Service {
+  id: string;
+  name: string;
+}
+
 const Staff = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [showNewStaffForm, setShowNewStaffForm] = useState(false);
   const [showWorkingHoursModal, setShowWorkingHoursModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    specialties: "",
     profileImage: null as File | null
   });
 
@@ -50,6 +56,7 @@ const Staff = () => {
 
   useEffect(() => {
     fetchStaff();
+    fetchServices();
   }, []);
 
   const fetchStaff = async () => {
@@ -69,6 +76,25 @@ const Staff = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setServices(data || []);
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Hizmetler yüklenirken bir hata oluştu.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -132,7 +158,7 @@ const Staff = () => {
           email: formData.email || null,
           phone: formData.phone || null,
           profile_image_url: profileImageUrl,
-          specialties: formData.specialties ? formData.specialties.split(',').map(s => s.trim()) : null,
+          specialties: selectedServices.length > 0 ? services.filter(s => selectedServices.includes(s.id)).map(s => s.name) : null,
           business_id: businessId,
           is_active: true
         }]);
@@ -144,7 +170,8 @@ const Staff = () => {
         description: "Yeni personel eklendi.",
       });
 
-      setFormData({ name: "", email: "", phone: "", specialties: "", profileImage: null });
+      setFormData({ name: "", email: "", phone: "", profileImage: null });
+      setSelectedServices([]);
       setShowNewStaffForm(false);
       fetchStaff();
     } catch (error) {
@@ -190,7 +217,7 @@ const Staff = () => {
           email: formData.email || null,
           phone: formData.phone || null,
           profile_image_url: profileImageUrl,
-          specialties: formData.specialties ? formData.specialties.split(',').map(s => s.trim()) : null,
+          specialties: selectedServices.length > 0 ? services.filter(s => selectedServices.includes(s.id)).map(s => s.name) : null,
         })
         .eq('id', editingStaff.id);
 
@@ -244,14 +271,27 @@ const Staff = () => {
       name: staffMember.name,
       email: staffMember.email || "",
       phone: staffMember.phone || "",
-      specialties: staffMember.specialties?.join(', ') || "",
       profileImage: null
     });
+    // Set selected services based on staff's specialties
+    const staffServices = services.filter(service => 
+      staffMember.specialties?.some(specialty => specialty === service.name)
+    ).map(service => service.id);
+    setSelectedServices(staffServices);
   };
 
   const cancelEdit = () => {
     setEditingStaff(null);
-    setFormData({ name: "", email: "", phone: "", specialties: "", profileImage: null });
+    setFormData({ name: "", email: "", phone: "", profileImage: null });
+    setSelectedServices([]);
+  };
+
+  const toggleServiceSelection = (serviceId: string) => {
+    setSelectedServices(prev => 
+      prev.includes(serviceId) 
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
+    );
   };
 
   const handleWorkingHoursClick = (staffMember: Staff) => {
@@ -348,15 +388,27 @@ const Staff = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="specialties">Uzmanlık Alanları (virgülle ayırın)</Label>
-              <Textarea
-                id="specialties"
-                name="specialties"
-                placeholder="Saç Kesimi, Saç Boyama, Fön"
-                value={formData.specialties}
-                onChange={handleInputChange}
-                rows={2}
-              />
+              <Label>Uzmanlık Alanları</Label>
+              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                {services.map((service) => (
+                  <div
+                    key={service.id}
+                    onClick={() => toggleServiceSelection(service.id)}
+                    className={`cursor-pointer p-2 rounded-md border text-sm transition-colors ${
+                      selectedServices.includes(service.id)
+                        ? 'bg-brand-primary text-white border-brand-primary'
+                        : 'bg-background border-border hover:bg-muted'
+                    }`}
+                  >
+                    {service.name}
+                  </div>
+                ))}
+              </div>
+              {services.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  Önce hizmet eklemeniz gerekiyor.
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2">
@@ -367,7 +419,8 @@ const Staff = () => {
               <Button 
                 onClick={() => {
                   setShowNewStaffForm(false);
-                  setFormData({ name: "", email: "", phone: "", specialties: "", profileImage: null });
+                  setFormData({ name: "", email: "", phone: "", profileImage: null });
+                  setSelectedServices([]);
                 }}
                 variant="outline"
               >
@@ -413,12 +466,21 @@ const Staff = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Uzmanlık Alanları</Label>
-                  <Textarea
-                    name="specialties"
-                    value={formData.specialties}
-                    onChange={handleInputChange}
-                    rows={2}
-                  />
+                  <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                    {services.map((service) => (
+                      <div
+                        key={service.id}
+                        onClick={() => toggleServiceSelection(service.id)}
+                        className={`cursor-pointer p-2 rounded-md border text-sm transition-colors ${
+                          selectedServices.includes(service.id)
+                            ? 'bg-brand-primary text-white border-brand-primary'
+                            : 'bg-background border-border hover:bg-muted'
+                        }`}
+                      >
+                        {service.name}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={handleUpdateStaff} size="sm" variant="brand">

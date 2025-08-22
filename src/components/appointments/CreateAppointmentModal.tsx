@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Save, X } from "lucide-react";
+import { CreateCustomerModal } from "@/components/customers/CreateCustomerModal";
+import { Calendar, Save, X, UserPlus } from "lucide-react";
 
 interface CreateAppointmentModalProps {
   open: boolean;
@@ -43,9 +45,10 @@ export const CreateAppointmentModal = ({
   const [services, setServices] = useState<Service[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     customer_id: "",
-    service_id: "",
     staff_id: "",
     appointment_date: "",
     start_time: "",
@@ -110,10 +113,37 @@ export const CreateAppointmentModal = ({
     return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
   };
 
+  const toggleServiceSelection = (serviceId: string) => {
+    setSelectedServices(prev => 
+      prev.includes(serviceId) 
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
+    );
+  };
+
+  const handleNewCustomerAdded = (customer: Customer) => {
+    setCustomers(prev => [customer, ...prev]);
+    setFormData(prev => ({ ...prev, customer_id: customer.id }));
+  };
+
+  const calculateTotalPrice = () => {
+    return selectedServices.reduce((total, serviceId) => {
+      const service = services.find(s => s.id === serviceId);
+      return total + (service?.price || 0);
+    }, 0);
+  };
+
+  const calculateTotalDuration = () => {
+    return selectedServices.reduce((total, serviceId) => {
+      const service = services.find(s => s.id === serviceId);
+      return total + (service?.duration_minutes || 0);
+    }, 0);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.customer_id || !formData.service_id || !formData.appointment_date || !formData.start_time) {
+    if (!formData.customer_id || selectedServices.length === 0 || !formData.appointment_date || !formData.start_time) {
       toast({
         title: "Hata",
         description: "Lütfen tüm zorunlu alanları doldurun.",
@@ -126,43 +156,46 @@ export const CreateAppointmentModal = ({
 
     try {
       const businessId = await getBusinessId();
-      const selectedService = services.find(s => s.id === formData.service_id);
-      
-      if (!selectedService) throw new Error("Hizmet bulunamadı");
+      const totalDuration = calculateTotalDuration();
+      const totalPrice = calculateTotalPrice();
+      const endTime = calculateEndTime(formData.start_time, totalDuration);
 
-      const endTime = calculateEndTime(formData.start_time, selectedService.duration_minutes);
+      // Create appointments for each selected service
+      const appointmentPromises = selectedServices.map(async (serviceId) => {
+        const { error } = await supabase
+          .from('appointments')
+          .insert([{
+            business_id: businessId,
+            customer_id: formData.customer_id,
+            service_id: serviceId,
+            staff_id: formData.staff_id || null,
+            appointment_date: formData.appointment_date,
+            start_time: formData.start_time,
+            end_time: endTime,
+            total_price: totalPrice,
+            notes: formData.notes || null,
+            status: 'scheduled'
+          }]);
 
-      const { error } = await supabase
-        .from('appointments')
-        .insert([{
-          business_id: businessId,
-          customer_id: formData.customer_id,
-          service_id: formData.service_id,
-          staff_id: formData.staff_id || null,
-          appointment_date: formData.appointment_date,
-          start_time: formData.start_time,
-          end_time: endTime,
-          total_price: selectedService.price,
-          notes: formData.notes || null,
-          status: 'scheduled'
-        }]);
+        if (error) throw error;
+      });
 
-      if (error) throw error;
+      await Promise.all(appointmentPromises);
 
       toast({
         title: "Başarılı!",
-        description: "Randevu oluşturuldu.",
+        description: `${selectedServices.length} randevu oluşturuldu.`,
       });
 
       // Form'u temizle
       setFormData({
         customer_id: "",
-        service_id: "",
         staff_id: "",
         appointment_date: "",
         start_time: "",
         notes: ""
       });
+      setSelectedServices([]);
 
       onSuccess();
       onOpenChange(false);
@@ -191,44 +224,84 @@ export const CreateAppointmentModal = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
               <Label htmlFor="customer">Müşteri *</Label>
-              <Select
-                value={formData.customer_id}
-                onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowNewCustomerModal(true)}
+                className="h-8"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Müşteri seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.first_name} {customer.last_name} - {customer.phone}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <UserPlus className="h-4 w-4 mr-1" />
+                Yeni Müşteri
+              </Button>
             </div>
+            <Select
+              value={formData.customer_id}
+              onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Müşteri seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map((customer) => (
+                  <SelectItem key={customer.id} value={customer.id}>
+                    {customer.first_name} {customer.last_name} - {customer.phone}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="service">Hizmet *</Label>
-              <Select
-                value={formData.service_id}
-                onValueChange={(value) => setFormData({ ...formData, service_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Hizmet seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.name} - {service.duration_minutes}dk - ₺{service.price}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-2">
+            <Label>Hizmetler * (Birden fazla seçebilirsiniz)</Label>
+            <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
+              {services.map((service) => (
+                <div
+                  key={service.id}
+                  onClick={() => toggleServiceSelection(service.id)}
+                  className={`cursor-pointer p-2 rounded-md border text-sm transition-colors ${
+                    selectedServices.includes(service.id)
+                      ? 'bg-brand-primary text-white border-brand-primary'
+                      : 'bg-background border-border hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">{service.name}</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span>{service.duration_minutes}dk</span>
+                      <span>₺{service.price}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+            {selectedServices.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-2">
+                {selectedServices.map((serviceId) => {
+                  const service = services.find(s => s.id === serviceId);
+                  return service ? (
+                    <Badge key={serviceId} variant="secondary" className="text-xs">
+                      {service.name}
+                    </Badge>
+                  ) : null;
+                })}
+              </div>
+            )}
+            {selectedServices.length > 0 && (
+              <div className="text-sm text-muted-foreground border-t pt-2">
+                <div className="flex justify-between">
+                  <span>Toplam Süre:</span>
+                  <span className="font-medium">{calculateTotalDuration()} dakika</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Toplam Fiyat:</span>
+                  <span className="font-medium">₺{calculateTotalPrice()}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -307,6 +380,12 @@ export const CreateAppointmentModal = ({
             </Button>
           </div>
         </form>
+
+        <CreateCustomerModal
+          open={showNewCustomerModal}
+          onOpenChange={setShowNewCustomerModal}
+          onSuccess={handleNewCustomerAdded}
+        />
       </DialogContent>
     </Dialog>
   );
