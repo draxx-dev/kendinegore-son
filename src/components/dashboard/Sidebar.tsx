@@ -99,24 +99,24 @@ export function DashboardSidebar() {
 
   const getNavClassName = (isActiveRoute: boolean) =>
     isActiveRoute 
-      ? "bg-primary/5 text-primary shadow-sm border-l-4 border-primary" 
-      : "hover:bg-secondary/50 hover:shadow-sm";
+      ? "bg-primary/10 text-primary border-r-2 border-primary" 
+      : "hover:bg-secondary/30 hover:border-r-2 hover:border-border";
 
   return (
     <Sidebar className={collapsed ? "w-16" : "w-72"} collapsible="icon">
       <SidebarContent className="bg-white border-r border-border shadow-sm">
         {/* Header */}
-        <div className="p-6 border-b border-border">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between">
             {!collapsed && (
               <div>
-                <h2 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                <h2 className="text-xl font-bold text-foreground">
                   KendineGöre
                 </h2>
-                <p className="text-sm text-muted-foreground mt-1 font-medium">Yönetim Paneli</p>
+                <p className="text-sm text-muted-foreground mt-1">Yönetim Paneli</p>
               </div>
             )}
-            <SidebarTrigger className="ml-auto h-8 w-8 hover:bg-secondary" />
+            <SidebarTrigger className="ml-auto h-8 w-8 hover:bg-secondary/50" />
           </div>
         </div>
 
@@ -173,8 +173,8 @@ export function DashboardSidebar() {
                   <div 
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer group ${
                       businessItems.some(item => isActive(item.url)) 
-                        ? "bg-primary/5 text-primary shadow-sm border-l-4 border-primary" 
-                        : "hover:bg-secondary/50 hover:shadow-sm"
+                        ? "bg-primary/10 text-primary border-r-2 border-primary" 
+                        : "hover:bg-secondary/30 hover:border-r-2 hover:border-border"
                     }`}
                     onClick={() => !collapsed && setBusinessExpanded(!businessExpanded)}
                     title={collapsed ? "İşletme Yönetimi" : undefined}
@@ -262,19 +262,23 @@ export function DashboardSidebar() {
         </SidebarGroup>
 
         {/* Settings */}
-        <div className="p-6 border-t border-border">
+        <div className="p-4 border-t border-border">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <NavLink 
                   to="/dashboard/settings" 
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/50 hover:shadow-sm transition-all duration-300 group"
+                  className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
                   title={collapsed ? "Ayarlar" : undefined}
                 >
-                  <div className="p-2 rounded-lg bg-secondary group-hover:bg-primary/10 transition-colors">
-                    <Settings className="h-4 w-4 flex-shrink-0" />
-                  </div>
-                  {!collapsed && <span className="text-sm font-semibold">Ayarlar</span>}
+                  {({isActive}) => (
+                    <>
+                      <div className={`p-2 rounded-lg transition-colors ${isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                        <Settings className="h-4 w-4 flex-shrink-0" />
+                      </div>
+                      {!collapsed && <span className="text-sm font-semibold">Ayarlar</span>}
+                    </>
+                  )}
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>

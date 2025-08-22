@@ -89,10 +89,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </div>
               
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-muted-foreground hidden sm:block px-3 py-1.5 bg-secondary rounded-full">
+                <span className="text-sm text-muted-foreground hidden sm:block px-3 py-1.5 bg-secondary/50 rounded-full">
                   Hoş geldiniz, {user.user_metadata?.first_name || user.email}
                 </span>
-                <Button variant="outline" size="icon" className="hover:bg-secondary">
+                <Button variant="outline" size="icon" className="hover:bg-secondary/50">
                   <Settings className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
