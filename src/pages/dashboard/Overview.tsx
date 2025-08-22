@@ -190,7 +190,7 @@ const Overview = () => {
       {/* Welcome Section */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-foreground mb-3">
-          Yönetim Paneli
+          İyi Günler!
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl">
           Salon yönetim panelinize hoş geldiniz. İşletmenizi profesyonelce yönetmek için ihtiyacınız olan her şey burada.
