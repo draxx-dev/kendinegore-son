@@ -116,9 +116,9 @@ export const HeroSection = () => {
           {/* Stats */}
           <div id="stats-section" className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
-              <Card key={index} className="bg-white/60 backdrop-blur-xl border-white/30 p-6 text-center hover:bg-white/70 hover:scale-105 hover:-translate-y-1 transition-all duration-500 shadow-xl hover:shadow-2xl group">
+              <Card key={index} className="bg-white/40 backdrop-blur-3xl border-white/20 p-6 text-center hover:bg-white/50 hover:scale-105 hover:-translate-y-1 transition-all duration-500 shadow-xl hover:shadow-2xl group">
                 <stat.icon className="h-8 w-8 text-gray-700 mx-auto mb-3 group-hover:text-gray-900 group-hover:scale-110 transition-all duration-300" />
-                <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 font-playfair">
+                <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 font-inter">
                   {hasAnimated ? formatValue(animatedValues[index], index) : '0'}
                 </div>
                 <div className="text-gray-700 text-sm md:text-base font-inter">
