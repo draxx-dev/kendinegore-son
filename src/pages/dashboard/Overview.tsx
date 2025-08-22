@@ -189,8 +189,8 @@ const Overview = () => {
     <div className="space-y-8">
       {/* Welcome Section */}
       <div className="mb-10">
-        <h1 className="text-4xl font-bold text-foreground mb-3 bg-gradient-primary bg-clip-text text-transparent">
-          İyi günler! 👋
+        <h1 className="text-4xl font-bold text-foreground mb-3">
+          Yönetim Paneli
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl">
           Salon yönetim panelinize hoş geldiniz. İşletmenizi profesyonelce yönetmek için ihtiyacınız olan her şey burada.
