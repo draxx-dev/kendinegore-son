@@ -19,7 +19,10 @@ import {
   MapPin,
   Star,
   CheckCircle,
-  ArrowLeft
+  ArrowLeft,
+  User,
+  Users,
+  Image as ImageIcon
 } from "lucide-react";
 import { format, addDays, isSameDay, isAfter, isBefore, startOfDay } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -33,6 +36,7 @@ interface Business {
   email: string | null;
   address: string | null;
   city: string | null;
+  district: string | null;
   slug: string;
 }
 
@@ -55,7 +59,16 @@ interface WorkingHours {
 interface Staff {
   id: string;
   name: string;
+  email: string | null;
+  phone: string | null;
+  profile_image_url: string | null;
   specialties: string[] | null;
+}
+
+interface PortfolioImage {
+  id: string;
+  url: string;
+  title: string;
 }
 
 const PublicBooking = () => {
@@ -66,6 +79,7 @@ const PublicBooking = () => {
   const [business, setBusiness] = useState<Business | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
+  const [portfolioImages, setPortfolioImages] = useState<PortfolioImage[]>([]);
   const [workingHours, setWorkingHours] = useState<WorkingHours[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(1);
@@ -138,6 +152,9 @@ const PublicBooking = () => {
 
       setWorkingHours(workingHoursData || []);
 
+      // Fetch portfolio images
+      await fetchPortfolioImages(businessData.owner_id);
+
     } catch (error) {
       console.error('İşletme bilgileri yüklenirken hata:', error);
       toast({
@@ -147,6 +164,36 @@ const PublicBooking = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPortfolioImages = async (ownerId: string) => {
+    try {
+      const { data: files, error } = await supabase.storage
+        .from('business-portfolio')
+        .list(ownerId, {
+          limit: 20,
+          offset: 0
+        });
+
+      if (error) throw error;
+
+      const imagePromises = files?.map(async (file) => {
+        const { data: { publicUrl } } = supabase.storage
+          .from('business-portfolio')
+          .getPublicUrl(`${ownerId}/${file.name}`);
+        
+        return {
+          id: file.name,
+          url: publicUrl,
+          title: file.name.split('.')[0].replace(/[-_]/g, ' ')
+        };
+      }) || [];
+
+      const imageResults = await Promise.all(imagePromises);
+      setPortfolioImages(imageResults);
+    } catch (error) {
+      console.error('Portfolio resimleri yüklenirken hata:', error);
     }
   };
 
@@ -231,12 +278,21 @@ const PublicBooking = () => {
       endTime.setHours(startHour, startMinute + totalDuration, 0, 0);
       const endTimeStr = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
 
+      // Determine staff assignment
+      let finalStaffId = selectedStaff;
+      
+      if (!selectedStaff && staff.length > 0) {
+        // If no staff selected, assign randomly from available staff
+        const randomIndex = Math.floor(Math.random() * staff.length);
+        finalStaffId = staff[randomIndex].id;
+      }
+
       // Create appointments for each service
       const appointments = selectedServiceData.map(service => ({
         business_id: business.id,
         customer_id: customer.id,
         service_id: service.id,
-        staff_id: selectedStaff || null,
+        staff_id: finalStaffId || null,
         appointment_date: format(selectedDate, 'yyyy-MM-dd'),
         start_time: selectedTime,
         end_time: endTimeStr,
@@ -257,7 +313,7 @@ const PublicBooking = () => {
         description: "Randevunuz başarıyla oluşturuldu. En kısa sürede size dönüş yapılacak.",
       });
 
-      setStep(5); // Success step
+      setStep(6); // Success step
 
     } catch (error) {
       console.error('Randevu oluşturma hatası:', error);
@@ -331,14 +387,46 @@ const PublicBooking = () => {
             {business.address && (
               <div className="flex items-center gap-1">
                 <MapPin className="h-4 w-4" />
-                {business.address}, {business.city}
+                {business.address}
+                {business.city && `, ${business.city}`}
+                {business.district && `, ${business.district}`}
               </div>
             )}
           </div>
         </div>
 
+        {/* Portfolio Section */}
+        {portfolioImages.length > 0 && (
+          <div className="mb-8">
+            <Card className="bg-white/90 backdrop-blur-sm border-brand-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5 text-brand-primary" />
+                  Çalışmalarımız
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {portfolioImages.slice(0, 8).map((image) => (
+                    <div key={image.id} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                      <img 
+                        src={image.url} 
+                        alt={image.title}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400";
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <div className="max-w-4xl mx-auto">
-          {step === 5 ? (
+          {step === 6 ? (
             // Success Step
             <Card className="text-center">
               <CardContent className="py-12">
@@ -363,7 +451,7 @@ const PublicBooking = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Step 1: Service Selection */}
+                 {/* Step 1: Service Selection */}
                 {step === 1 && (
                   <Card>
                     <CardHeader>
@@ -416,8 +504,87 @@ const PublicBooking = () => {
                   </Card>
                 )}
 
-                {/* Step 2: Date Selection */}
-                {step === 2 && (
+                {/* Step 2: Staff Selection */}
+                {step === 2 && staff.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Personel Seçimi</CardTitle>
+                      <CardDescription>
+                        Hizmet almak istediğiniz personeli seçin (opsiyonel)
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        {/* Fark etmez seçeneği */}
+                        <Card 
+                          className={cn(
+                            "cursor-pointer transition-all hover:shadow-md",
+                            selectedStaff === "" 
+                              ? "ring-2 ring-brand-primary bg-brand-primary/5" 
+                              : ""
+                          )}
+                          onClick={() => setSelectedStaff("")}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <Users className="h-6 w-6 text-brand-primary mt-1" />
+                              <div>
+                                <h3 className="font-semibold">Fark Etmez</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  Müsait olan personel otomatik atanacak
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Personel listesi */}
+                        {staff.map((member) => (
+                          <Card 
+                            key={member.id}
+                            className={cn(
+                              "cursor-pointer transition-all hover:shadow-md",
+                              selectedStaff === member.id 
+                                ? "ring-2 ring-brand-primary bg-brand-primary/5" 
+                                : ""
+                            )}
+                            onClick={() => setSelectedStaff(member.id)}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3">
+                                <User className="h-6 w-6 text-brand-primary mt-1" />
+                                <div>
+                                  <h3 className="font-semibold">{member.name}</h3>
+                                  {member.specialties && member.specialties.length > 0 && (
+                                    <p className="text-sm text-muted-foreground">
+                                      Uzmanlık: {member.specialties.join(', ')}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <Button onClick={() => setStep(1)} variant="outline">
+                          <ArrowLeft className="h-4 w-4 mr-2" />
+                          Geri
+                        </Button>
+                        <Button 
+                          onClick={() => setStep(staff.length > 0 ? 3 : 2)} 
+                          variant="brand"
+                        >
+                          Devam Et
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Step 3: Date Selection */}
+                {step === 3 && (
                   <Card>
                     <CardHeader>
                       <CardTitle>Tarih Seçimi</CardTitle>
@@ -440,12 +607,12 @@ const PublicBooking = () => {
                         />
                       </div>
                       <div className="flex justify-between mt-6">
-                        <Button onClick={() => setStep(1)} variant="outline">
+                        <Button onClick={() => setStep(staff.length > 0 ? 2 : 1)} variant="outline">
                           <ArrowLeft className="h-4 w-4 mr-2" />
                           Geri
                         </Button>
                         <Button 
-                          onClick={() => setStep(3)} 
+                          onClick={() => setStep(4)} 
                           disabled={!selectedDate}
                           variant="brand"
                         >
@@ -456,8 +623,8 @@ const PublicBooking = () => {
                   </Card>
                 )}
 
-                {/* Step 3: Time Selection */}
-                {step === 3 && (
+                {/* Step 4: Time Selection */}
+                {step === 4 && (
                   <Card>
                     <CardHeader>
                       <CardTitle>Saat Seçimi</CardTitle>
@@ -485,12 +652,12 @@ const PublicBooking = () => {
                         </div>
                       )}
                       <div className="flex justify-between mt-6">
-                        <Button onClick={() => setStep(2)} variant="outline">
+                        <Button onClick={() => setStep(3)} variant="outline">
                           <ArrowLeft className="h-4 w-4 mr-2" />
                           Geri
                         </Button>
                         <Button 
-                          onClick={() => setStep(4)} 
+                          onClick={() => setStep(5)} 
                           disabled={!selectedTime}
                           variant="brand"
                         >
@@ -501,8 +668,8 @@ const PublicBooking = () => {
                   </Card>
                 )}
 
-                {/* Step 4: Customer Information */}
-                {step === 4 && (
+                {/* Step 5: Customer Information */}
+                {step === 5 && (
                   <Card>
                     <CardHeader>
                       <CardTitle>İletişim Bilgileri</CardTitle>
@@ -564,7 +731,7 @@ const PublicBooking = () => {
                         />
                       </div>
                       <div className="flex justify-between">
-                        <Button onClick={() => setStep(3)} variant="outline">
+                        <Button onClick={() => setStep(4)} variant="outline">
                           <ArrowLeft className="h-4 w-4 mr-2" />
                           Geri
                         </Button>
@@ -589,26 +756,27 @@ const PublicBooking = () => {
                     <CardTitle className="text-lg">Randevu Süreci</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {[
-                        { step: 1, title: "Hizmet Seçimi", icon: Star },
-                        { step: 2, title: "Tarih Seçimi", icon: CalendarIcon },
-                        { step: 3, title: "Saat Seçimi", icon: Clock },
-                        { step: 4, title: "İletişim Bilgileri", icon: Phone },
-                      ].map(({ step: stepNum, title, icon: Icon }) => (
-                        <div 
-                          key={stepNum}
-                          className={cn(
-                            "flex items-center gap-3 p-2 rounded-lg",
-                            step === stepNum ? "bg-brand-primary/10 text-brand-primary" : 
-                            step > stepNum ? "text-green-600" : "text-muted-foreground"
-                          )}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span className="text-sm font-medium">{title}</span>
-                          {step > stepNum && <CheckCircle className="h-4 w-4 ml-auto" />}
-                        </div>
-                      ))}
+                     <div className="space-y-3">
+                       {[
+                         { step: 1, title: "Hizmet Seçimi", icon: Star },
+                         { step: 2, title: "Personel Seçimi", icon: User },
+                         { step: 3, title: "Tarih Seçimi", icon: CalendarIcon },
+                         { step: 4, title: "Saat Seçimi", icon: Clock },
+                         { step: 5, title: "İletişim Bilgileri", icon: Phone },
+                       ].map(({ step: stepNum, title, icon: Icon }) => (
+                         <div 
+                           key={stepNum}
+                           className={cn(
+                             "flex items-center gap-3 p-2 rounded-lg",
+                             step === stepNum ? "bg-brand-primary/10 text-brand-primary" : 
+                             step > stepNum ? "text-green-600" : "text-muted-foreground"
+                           )}
+                         >
+                           <Icon className="h-4 w-4" />
+                           <span className="text-sm font-medium">{title}</span>
+                           {step > stepNum && <CheckCircle className="h-4 w-4 ml-auto" />}
+                         </div>
+                       ))}
                     </div>
                   </CardContent>
                 </Card>

@@ -29,6 +29,7 @@ interface Business {
   email: string | null;
   address: string | null;
   city: string | null;
+  district: string | null;
   slug: string;
 }
 
@@ -126,7 +127,8 @@ const BusinessDetails = () => {
           phone: business.phone,
           email: business.email,
           address: business.address,
-          city: business.city
+          city: business.city,
+          district: business.district
         })
         .eq('id', business.id);
 
@@ -140,6 +142,40 @@ const BusinessDetails = () => {
       toast({
         title: "Hata",
         description: "İşletme bilgileri güncellenirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRegenerateSlug = async () => {
+    if (!business) return;
+
+    try {
+      const { data, error } = await supabase.rpc('generate_business_slug', {
+        business_name: business.name,
+        city_name: business.city,
+        district_name: business.district
+      });
+
+      if (error) throw error;
+
+      const { error: updateError } = await supabase
+        .from('businesses')
+        .update({ slug: data })
+        .eq('id', business.id);
+
+      if (updateError) throw updateError;
+
+      setBusiness({ ...business, slug: data });
+
+      toast({
+        title: "Başarılı!",
+        description: "Online randevu linki güncellendi.",
+      });
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Link güncellenirken bir hata oluştu.",
         variant: "destructive",
       });
     }
@@ -297,7 +333,7 @@ const BusinessDetails = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="address">Adres</Label>
                 <Input
@@ -314,6 +350,15 @@ const BusinessDetails = () => {
                   value={business.city || ""}
                   onChange={(e) => setBusiness({ ...business, city: e.target.value })}
                   placeholder="Şehir"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="district">İlçe</Label>
+                <Input
+                  id="district"
+                  value={business.district || ""}
+                  onChange={(e) => setBusiness({ ...business, district: e.target.value })}
+                  placeholder="İlçe"
                 />
               </div>
             </div>
@@ -345,19 +390,28 @@ const BusinessDetails = () => {
                       {window.location.origin}/randevu/{business.slug}
                     </p>
                   </div>
-                  <Button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/randevu/${business.slug}`);
-                      toast({
-                        title: "Başarılı!",
-                        description: "Link panoya kopyalandı.",
-                      });
-                    }}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Kopyala
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/randevu/${business.slug}`);
+                        toast({
+                          title: "Başarılı!",
+                          description: "Link panoya kopyalandı.",
+                        });
+                      }}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Kopyala
+                    </Button>
+                    <Button
+                      onClick={handleRegenerateSlug}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Yenile
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -408,7 +462,11 @@ const BusinessDetails = () => {
                 {business.address && (
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{business.address}, {business.city}</span>
+                    <span className="text-sm">
+                      {business.address}
+                      {business.city && `, ${business.city}`}
+                      {business.district && `, ${business.district}`}
+                    </span>
                   </div>
                 )}
               </div>

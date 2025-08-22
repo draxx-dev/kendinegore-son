@@ -100,6 +100,7 @@ export type Database = {
           city: string | null
           created_at: string
           description: string | null
+          district: string | null
           email: string | null
           id: string
           name: string
@@ -113,6 +114,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           description?: string | null
+          district?: string | null
           email?: string | null
           id?: string
           name: string
@@ -126,6 +128,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           description?: string | null
+          district?: string | null
           email?: string | null
           id?: string
           name?: string
@@ -454,6 +457,14 @@ export type Database = {
       create_default_working_hours: {
         Args: { business_id_param: string }
         Returns: undefined
+      }
+      generate_business_slug: {
+        Args: {
+          business_name: string
+          city_name?: string
+          district_name?: string
+        }
+        Returns: string
       }
     }
     Enums: {
