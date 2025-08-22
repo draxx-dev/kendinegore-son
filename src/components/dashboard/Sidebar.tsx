@@ -134,7 +134,7 @@ export function DashboardSidebar() {
             {!collapsed && "Ana Menü"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2 px-4">
+            <SidebarMenu className="space-y-2 px-2">
               {navigationItems.map((item) => {
                 const isActiveRoute = isActive(item.url);
                 return (
@@ -143,7 +143,7 @@ export function DashboardSidebar() {
                       <NavLink 
                         to={item.url} 
                         end={item.url === "/dashboard"}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                         title={collapsed ? item.title : undefined}
                       >
                         <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
@@ -174,12 +174,12 @@ export function DashboardSidebar() {
             {!collapsed && "İşletme Yönetimi"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2 px-4">
+            <SidebarMenu className="space-y-2 px-2">
               {/* Business Details with Expandable Submenu */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <div 
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer group ${
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 cursor-pointer group ${
                       businessItems.some(item => isActive(item.url)) 
                         ? "text-primary" 
                         : "hover:bg-secondary/30"
@@ -254,11 +254,11 @@ export function DashboardSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={item.url} 
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
-                        title={item.title}
-                      >
+                        <NavLink 
+                          to={item.url} 
+                          className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
+                          title={item.title}
+                        >
                         <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
                           <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                         </div>
@@ -278,7 +278,7 @@ export function DashboardSidebar() {
               <SidebarMenuButton asChild>
                 <NavLink 
                   to="/dashboard/settings" 
-                  className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
+                  className={({isActive}) => `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
                   title={collapsed ? "Ayarlar" : undefined}
                 >
                   {({isActive}) => (
