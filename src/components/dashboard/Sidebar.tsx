@@ -100,7 +100,7 @@ export function DashboardSidebar() {
 
   const getNavClassName = (isActiveRoute: boolean) =>
     isActiveRoute 
-      ? "bg-primary/10 text-primary" 
+      ? "text-primary" 
       : "hover:bg-secondary/30";
 
   return (
@@ -146,8 +146,8 @@ export function DashboardSidebar() {
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                         title={collapsed ? item.title : undefined}
                       >
-                        <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0`} />
+                        <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                         </div>
                         {!collapsed && (
                           <div className="flex-1 min-w-0">
@@ -181,7 +181,7 @@ export function DashboardSidebar() {
                   <div 
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer group ${
                       businessItems.some(item => isActive(item.url)) 
-                        ? "bg-primary/10 text-primary" 
+                        ? "text-primary" 
                         : "hover:bg-secondary/30"
                     }`}
                     onClick={() => !collapsed && setBusinessExpanded(!businessExpanded)}
@@ -189,10 +189,12 @@ export function DashboardSidebar() {
                   >
                     <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${
                       businessItems.some(item => isActive(item.url)) 
-                        ? 'bg-primary text-primary-foreground' 
+                        ? 'text-primary' 
                         : 'bg-secondary group-hover:bg-primary/10'
                     }`}>
-                      <Building className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0`} />
+                      <Building className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${
+                        businessItems.some(item => isActive(item.url)) ? 'text-primary' : ''
+                      }`} />
                     </div>
                     {!collapsed && (
                       <>
@@ -227,8 +229,8 @@ export function DashboardSidebar() {
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                             title={item.title}
                           >
-                            <div className={`p-1.5 rounded-md transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary/50 group-hover:bg-primary/10'}`}>
-                              <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
+                            <div className={`p-1.5 rounded-md transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary/50 group-hover:bg-primary/10'}`}>
+                              <item.icon className={`h-3.5 w-3.5 flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                             </div>
                             <div className="flex-1 min-w-0">
                               <span className="text-sm font-medium truncate block">
@@ -257,8 +259,8 @@ export function DashboardSidebar() {
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                         title={item.title}
                       >
-                        <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0`} />
+                        <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                         </div>
                       </NavLink>
                     </SidebarMenuButton>
@@ -281,8 +283,8 @@ export function DashboardSidebar() {
                 >
                   {({isActive}) => (
                     <>
-                      <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                        <Settings className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0`} />
+                      <div className={`${collapsed ? 'p-3' : 'p-2'} rounded-lg transition-colors ${isActive ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                        <Settings className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActive ? 'text-primary' : ''}`} />
                       </div>
                       {!collapsed && <span className="text-sm font-semibold">Ayarlar</span>}
                     </>
