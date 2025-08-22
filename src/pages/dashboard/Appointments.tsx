@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Plus, Clock, User, Scissors, Filter } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Calendar as CalendarIcon, Plus, Clock, User, Scissors, Filter, LayoutGrid } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateAppointmentModal } from "@/components/appointments/CreateAppointmentModal";
 import { PaymentModal } from "@/components/appointments/PaymentModal";
+import CalendarView from "@/components/appointments/CalendarView";
 
 interface Appointment {
   id: string;
@@ -27,6 +29,7 @@ interface Appointment {
     duration_minutes: number;
   };
   staff: {
+    id: string;
     name: string;
   } | null;
 }
@@ -49,6 +52,7 @@ interface GroupedAppointment {
     duration_minutes: number;
   }>;
   staff: {
+    id: string;
     name: string;
   } | null;
   appointment_ids: string[];
@@ -63,6 +67,7 @@ const Appointments = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<GroupedAppointment | null>(null);
+  const [isCalendarView, setIsCalendarView] = useState(false);
 
   const { toast } = useToast();
 
@@ -108,7 +113,7 @@ const Appointments = () => {
           *,
           customers(first_name, last_name, phone),
           services(name, duration_minutes),
-          staff(name)
+          staff(id, name)
         `)
         .order('start_time', { ascending: true });
 
@@ -253,17 +258,28 @@ const Appointments = () => {
             Randevu Yönetimi
           </h1>
           <p className="text-muted-foreground mt-1">
-            Randevularınızı takvim görünümünde yönetin.
+            Randevularınızı {isCalendarView ? 'takvim' : 'liste'} görünümünde yönetin.
           </p>
         </div>
-        <Button 
-          onClick={() => setShowCreateModal(true)}
-          variant="brand" 
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Yeni Randevu
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Liste Modu</span>
+            <Switch 
+              checked={isCalendarView}
+              onCheckedChange={setIsCalendarView}
+            />
+            <span className="text-sm text-muted-foreground">Takvim Modu</span>
+            <LayoutGrid className="h-4 w-4 text-brand-primary" />
+          </div>
+          <Button 
+            onClick={() => setShowCreateModal(true)}
+            variant="brand" 
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Yeni Randevu
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -326,78 +342,91 @@ const Appointments = () => {
         </Card>
       </div>
 
-      {/* Appointments List */}
-      <div className="space-y-4">
-        {groupedAppointments.map((groupedAppointment) => (
-          <Card key={groupedAppointment.appointment_group_id} className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">
-                        {groupedAppointment.start_time.slice(0, 5)} - {groupedAppointment.end_time.slice(0, 5)}
-                      </span>
+      {/* Calendar View or Appointments List */}
+      {isCalendarView ? (
+        <CalendarView 
+          selectedDate={selectedDate}
+          appointments={appointments}
+          onStatusUpdate={(groupId, status) => {
+            const groupedAppointment = groupedAppointments.find(g => g.appointment_group_id === groupId);
+            if (groupedAppointment) {
+              updateAppointmentStatus(groupedAppointment, status);
+            }
+          }}
+        />
+      ) : (
+        <div className="space-y-4">
+          {groupedAppointments.map((groupedAppointment) => (
+            <Card key={groupedAppointment.appointment_group_id} className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">
+                          {groupedAppointment.start_time.slice(0, 5)} - {groupedAppointment.end_time.slice(0, 5)}
+                        </span>
+                      </div>
+                      {getStatusBadge(groupedAppointment.status)}
                     </div>
-                    {getStatusBadge(groupedAppointment.status)}
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-medium">
-                          {groupedAppointment.customers.first_name} {groupedAppointment.customers.last_name}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {groupedAppointment.customers.phone}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium">
+                            {groupedAppointment.customers.first_name} {groupedAppointment.customers.last_name}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {groupedAppointment.customers.phone}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <Scissors className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex items-center gap-2">
+                        <Scissors className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium">
+                            {groupedAppointment.services.map(service => service.name).join(", ")}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {groupedAppointment.services.reduce((total, service) => total + service.duration_minutes, 0)} dakika
+                          </div>
+                          {groupedAppointment.services.length > 1 && (
+                            <div className="text-xs text-muted-foreground">
+                              {groupedAppointment.services.length} hizmet
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       <div>
-                        <div className="font-medium">
-                          {groupedAppointment.services.map(service => service.name).join(", ")}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {groupedAppointment.services.reduce((total, service) => total + service.duration_minutes, 0)} dakika
-                        </div>
-                        {groupedAppointment.services.length > 1 && (
-                          <div className="text-xs text-muted-foreground">
-                            {groupedAppointment.services.length} hizmet
+                        <div className="font-medium">₺{groupedAppointment.total_price}</div>
+                        {groupedAppointment.staff && (
+                          <div className="text-sm text-muted-foreground">
+                            {groupedAppointment.staff.name}
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div>
-                      <div className="font-medium">₺{groupedAppointment.total_price}</div>
-                      {groupedAppointment.staff && (
-                        <div className="text-sm text-muted-foreground">
-                          {groupedAppointment.staff.name}
-                        </div>
-                      )}
-                    </div>
+                    {groupedAppointment.notes && (
+                      <div className="mt-3 text-sm text-muted-foreground bg-gray-50 p-2 rounded">
+                        {groupedAppointment.notes}
+                      </div>
+                    )}
                   </div>
 
-                  {groupedAppointment.notes && (
-                    <div className="mt-3 text-sm text-muted-foreground bg-gray-50 p-2 rounded">
-                      {groupedAppointment.notes}
-                    </div>
-                  )}
+                  <div className="flex gap-2">
+                    {getStatusActions(groupedAppointment)}
+                  </div>
                 </div>
-
-                <div className="flex gap-2">
-                  {getStatusActions(groupedAppointment)}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {groupedAppointments.length === 0 && (
         <Card className="bg-white/50 backdrop-blur-sm border-brand-primary/10">
