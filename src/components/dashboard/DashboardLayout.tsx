@@ -74,7 +74,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm">
+          <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm pb-1">
             <div className="flex justify-between items-center h-16 px-6">
               <div className="flex items-center gap-4">
                 <div>
