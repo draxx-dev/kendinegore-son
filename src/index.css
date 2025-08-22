@@ -2,14 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* KendineGöre Design System - Inspired by Fresha
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
+    /* Brand Colors - Purple/Lavender Palette */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    
+    /* KendineGöre Brand Purple Palette */
+    --brand-primary: 262 73% 57%;
+    --brand-primary-light: 262 73% 67%;
+    --brand-primary-dark: 262 73% 47%;
+    --brand-secondary: 280 39% 80%;
+    --brand-accent: 290 15% 95%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 73% 57%), hsl(280 39% 80%));
+    --gradient-hero: linear-gradient(135deg, hsl(262 73% 57% / 0.9), hsl(280 39% 80% / 0.7));
+    --gradient-subtle: linear-gradient(180deg, hsl(262 73% 57% / 0.03), hsl(280 39% 80% / 0.08));
+    
+    /* Shadows */
+    --shadow-brand: 0 10px 30px -10px hsl(262 73% 57% / 0.3);
+    --shadow-soft: 0 2px 10px -2px hsl(262 73% 57% / 0.1);
+    --shadow-elevated: 0 20px 40px -15px hsl(262 73% 57% / 0.25);
+    
+    /* Animation */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -17,11 +39,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 262 73% 57%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 290 15% 95%;
+    --secondary-foreground: 262 73% 47%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
