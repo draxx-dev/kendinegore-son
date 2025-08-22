@@ -82,7 +82,7 @@ const PublicBooking = () => {
   const [portfolioImages, setPortfolioImages] = useState<PortfolioImage[]>([]);
   const [workingHours, setWorkingHours] = useState<WorkingHours[]>([]);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // 0 = Landing page, 1-5 = Booking steps
   
   // Form data
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -410,72 +410,218 @@ const PublicBooking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Building className="h-8 w-8 text-brand-primary" />
-            <h1 className="text-3xl font-bold text-foreground">{business.name}</h1>
+    <div className="min-h-screen bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5">
+      {step === 0 ? (
+        // Professional Landing Page
+        <div>
+          {/* Hero Section */}
+          <div className="bg-white border-b">
+            <div className="container mx-auto px-4 py-12">
+              <div className="text-center max-w-4xl mx-auto">
+                <div className="flex items-center justify-center gap-3 mb-6">
+                  <Building className="h-12 w-12 text-brand-primary" />
+                  <h1 className="text-4xl md:text-5xl font-bold text-foreground">{business.name}</h1>
+                </div>
+                {business.description && (
+                  <p className="text-muted-foreground text-xl mb-8 leading-relaxed">{business.description}</p>
+                )}
+                <Button 
+                  onClick={() => setStep(1)} 
+                  variant="brand" 
+                  size="lg"
+                  className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <CalendarIcon className="h-5 w-5 mr-2" />
+                  Randevu Al
+                </Button>
+              </div>
+            </div>
           </div>
-          {business.description && (
-            <p className="text-muted-foreground text-lg mb-4">{business.description}</p>
-          )}
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
-            {business.phone && (
-              <div className="flex items-center gap-1">
-                <Phone className="h-4 w-4" />
-                {business.phone}
+
+          <div className="container mx-auto px-4 py-12">
+            <div className="max-w-6xl mx-auto space-y-12">
+              
+              {/* Business Information */}
+              <Card className="bg-white shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-2xl">İletişim Bilgileri</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {business.phone && (
+                      <div className="flex items-center gap-3 p-4 bg-brand-primary/5 rounded-lg">
+                        <Phone className="h-6 w-6 text-brand-primary" />
+                        <div>
+                          <h3 className="font-semibold">Telefon</h3>
+                          <p className="text-muted-foreground">{business.phone}</p>
+                        </div>
+                      </div>
+                    )}
+                    {business.email && (
+                      <div className="flex items-center gap-3 p-4 bg-brand-primary/5 rounded-lg">
+                        <Mail className="h-6 w-6 text-brand-primary" />
+                        <div>
+                          <h3 className="font-semibold">E-posta</h3>
+                          <p className="text-muted-foreground">{business.email}</p>
+                        </div>
+                      </div>
+                    )}
+                    {business.address && (
+                      <div className="flex items-center gap-3 p-4 bg-brand-primary/5 rounded-lg">
+                        <MapPin className="h-6 w-6 text-brand-primary" />
+                        <div>
+                          <h3 className="font-semibold">Adres</h3>
+                          <p className="text-muted-foreground">
+                            {business.address}
+                            {business.city && `, ${business.city}`}
+                            {business.district && `, ${business.district}`}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Portfolio Section */}
+              {portfolioImages.length > 0 && (
+                <Card className="bg-white shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <ImageIcon className="h-6 w-6 text-brand-primary" />
+                      Çalışmalarımız
+                    </CardTitle>
+                    <CardDescription>
+                      Kaliteli hizmetimizin örneklerini keşfedin
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {portfolioImages.slice(0, 8).map((image) => (
+                        <div key={image.id} className="group">
+                          <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-md group-hover:shadow-lg transition-all duration-300">
+                            <img 
+                              src={image.url} 
+                              alt={image.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400";
+                              }}
+                            />
+                          </div>
+                          <h3 className="mt-3 font-medium text-center capitalize">{image.title}</h3>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Services Section */}
+              {services.length > 0 && (
+                <Card className="bg-white shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Star className="h-6 w-6 text-brand-primary" />
+                      Hizmetlerimiz
+                    </CardTitle>
+                    <CardDescription>
+                      Size özel profesyonel hizmetler sunuyoruz
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {services.map((service) => (
+                        <div key={service.id} className="p-6 bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 rounded-xl border border-brand-primary/10">
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 className="font-semibold text-lg">{service.name}</h3>
+                            <Badge variant="secondary" className="text-lg font-bold">₺{service.price}</Badge>
+                          </div>
+                          {service.description && (
+                            <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
+                              {service.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            {service.duration_minutes} dakika
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Staff Section */}
+              {staff.length > 0 && (
+                <Card className="bg-white shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Users className="h-6 w-6 text-brand-primary" />
+                      Uzman Ekibimiz
+                    </CardTitle>
+                    <CardDescription>
+                      Deneyimli ve profesyonel kadromuz
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {staff.map((member) => (
+                        <div key={member.id} className="text-center p-6 bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 rounded-xl border border-brand-primary/10">
+                          <User className="h-16 w-16 text-brand-primary mx-auto mb-4" />
+                          <h3 className="font-semibold text-lg mb-2">{member.name}</h3>
+                          {member.specialties && member.specialties.length > 0 && (
+                            <p className="text-muted-foreground text-sm">
+                              Uzmanlık: {member.specialties.join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Call to Action */}
+              <div className="text-center py-12">
+                <h2 className="text-3xl font-bold mb-4">Hemen Randevu Alın</h2>
+                <p className="text-muted-foreground text-lg mb-8">Profesyonel hizmetimizden yararlanmak için randevunuzu oluşturun</p>
+                <Button 
+                  onClick={() => setStep(1)} 
+                  variant="brand" 
+                  size="lg"
+                  className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <CalendarIcon className="h-5 w-5 mr-2" />
+                  Randevu Al
+                </Button>
               </div>
-            )}
-            {business.email && (
-              <div className="flex items-center gap-1">
-                <Mail className="h-4 w-4" />
-                {business.email}
-              </div>
-            )}
-            {business.address && (
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {business.address}
-                {business.city && `, ${business.city}`}
-                {business.district && `, ${business.district}`}
-              </div>
-            )}
+            </div>
           </div>
         </div>
-
-        {/* Portfolio Section */}
-        {portfolioImages.length > 0 && (
-          <div className="mb-8">
-            <Card className="bg-white/90 backdrop-blur-sm border-brand-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5 text-brand-primary" />
-                  Çalışmalarımız
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {portfolioImages.slice(0, 8).map((image) => (
-                    <div key={image.id} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                      <img 
-                        src={image.url} 
-                        alt={image.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400";
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+      ) : (
+        // Booking Steps
+        <div className="container mx-auto px-4 py-8">
+          {/* Back to main page button */}
+          <div className="mb-6">
+            <Button 
+              onClick={() => setStep(0)} 
+              variant="outline"
+              className="mb-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Ana Sayfaya Dön
+            </Button>
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-foreground flex items-center justify-center gap-2">
+                <Building className="h-6 w-6 text-brand-primary" />
+                {business.name} - Randevu Al
+              </h1>
+            </div>
           </div>
-        )}
 
-        <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto">
           {step === 6 ? (
             // Success Step
             <Card className="text-center">
@@ -903,8 +1049,9 @@ const PublicBooking = () => {
               </div>
             </div>
           )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
