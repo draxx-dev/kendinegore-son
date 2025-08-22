@@ -5,12 +5,17 @@ import { useEffect, useState } from "react";
 
 export const HeroSection = () => {
   const [currentText, setCurrentText] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
   const businessTypes = ["Güzellik Salonunuz", "Berberiniz", "Kuaförünüz"];
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentText((prev) => (prev + 1) % businessTypes.length);
-    }, 3000); // Her 3 saniyede bir değiş
+      setIsVisible(false); // Fade out
+      setTimeout(() => {
+        setCurrentText((prev) => (prev + 1) % businessTypes.length);
+        setIsVisible(true); // Fade in
+      }, 300); // Half of transition duration
+    }, 3000);
 
     return () => clearInterval(interval);
   }, []);
@@ -88,7 +93,9 @@ export const HeroSection = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-playfair font-bold text-gray-900 mb-6 leading-tight">
-            <span className="inline-block transition-all duration-500 ease-in-out transform">
+            <span className={`inline-block transition-all duration-700 ease-out transform ${
+              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+            }`}>
               {businessTypes[currentText]}
             </span>
             <br />
