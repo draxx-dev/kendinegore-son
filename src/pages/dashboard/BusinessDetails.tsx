@@ -17,7 +17,8 @@ import {
   MapPin,
   Phone,
   Mail,
-  Clock
+  Clock,
+  Calendar
 } from "lucide-react";
 
 interface Business {
@@ -28,6 +29,7 @@ interface Business {
   email: string | null;
   address: string | null;
   city: string | null;
+  slug: string;
 }
 
 interface BusinessImage {
@@ -320,6 +322,55 @@ const BusinessDetails = () => {
               <Save className="h-4 w-4 mr-2" />
               Bilgileri Güncelle
             </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Online Randevu Linki */}
+      {business && (
+        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+          <CardHeader>
+            <CardTitle className="text-green-800">Online Randevu Linki</CardTitle>
+            <CardDescription className="text-green-700">
+              Müşterileriniz bu link üzerinden online randevu alabilirler.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="p-4 bg-white rounded-lg border border-green-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Online Randevu Linkiniz:</p>
+                    <p className="font-mono text-sm bg-gray-100 px-3 py-2 rounded">
+                      {window.location.origin}/randevu/{business.slug}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/randevu/${business.slug}`);
+                      toast({
+                        title: "Başarılı!",
+                        description: "Link panoya kopyalandı.",
+                      });
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Kopyala
+                  </Button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => window.open(`${window.location.origin}/randevu/${business.slug}`, '_blank')}
+                  variant="brand"
+                  size="sm"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Önizleme Yap
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
