@@ -38,6 +38,7 @@ interface Business {
   city: string | null;
   district: string | null;
   slug: string;
+  owner_id: string;
 }
 
 interface Service {
@@ -83,6 +84,11 @@ const PublicBooking = () => {
   const [workingHours, setWorkingHours] = useState<WorkingHours[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState(0); // 0 = Landing page, 1-5 = Booking steps
+  
+  // Portfolio pagination
+  const [portfolioPage, setPortfolioPage] = useState(0);
+  const imagesPerPage = 4;
+  const totalPages = Math.ceil(portfolioImages.length / imagesPerPage);
   
   // Form data
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -410,486 +416,341 @@ const PublicBooking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5">
-      {step === 0 ? (
-        // Professional Landing Page
-        <div>
-          {/* Hero Section */}
-          <div className="bg-white border-b">
-            <div className="container mx-auto px-4 py-12">
-              <div className="text-center max-w-4xl mx-auto">
-                <div className="flex items-center justify-center gap-3 mb-6">
-                  <Building className="h-12 w-12 text-brand-primary" />
-                  <h1 className="text-4xl md:text-5xl font-bold text-foreground">{business.name}</h1>
-                </div>
-                {business.description && (
-                  <p className="text-muted-foreground text-xl mb-8 leading-relaxed">{business.description}</p>
-                )}
-                <Button 
-                  onClick={() => setStep(1)} 
-                  variant="brand" 
-                  size="lg"
-                  className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <CalendarIcon className="h-5 w-5 mr-2" />
-                  Randevu Al
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="container mx-auto px-4 py-12">
-            <div className="max-w-6xl mx-auto space-y-12">
-              
-              {/* Business Information */}
-              <Card className="bg-white shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-2xl">İletişim Bilgileri</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {business.phone && (
-                      <div className="flex items-center gap-3 p-4 bg-brand-primary/5 rounded-lg">
-                        <Phone className="h-6 w-6 text-brand-primary" />
-                        <div>
-                          <h3 className="font-semibold">Telefon</h3>
-                          <p className="text-muted-foreground">{business.phone}</p>
-                        </div>
-                      </div>
-                    )}
-                    {business.email && (
-                      <div className="flex items-center gap-3 p-4 bg-brand-primary/5 rounded-lg">
-                        <Mail className="h-6 w-6 text-brand-primary" />
-                        <div>
-                          <h3 className="font-semibold">E-posta</h3>
-                          <p className="text-muted-foreground">{business.email}</p>
-                        </div>
-                      </div>
-                    )}
-                    {business.address && (
-                      <div className="flex items-center gap-3 p-4 bg-brand-primary/5 rounded-lg">
-                        <MapPin className="h-6 w-6 text-brand-primary" />
-                        <div>
-                          <h3 className="font-semibold">Adres</h3>
-                          <p className="text-muted-foreground">
-                            {business.address}
-                            {business.city && `, ${business.city}`}
-                            {business.district && `, ${business.district}`}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+    <div className="min-h-screen bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {step === 0 ? (
+          // Main Business Card
+          <Card className="bg-white shadow-xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-brand-primary to-brand-secondary text-white p-6">
+              <h1 className="text-xl font-bold text-center mb-4">{business.name}</h1>
+              <div className="space-y-2 text-sm">
+                {business.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    <span>{business.phone}</span>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Portfolio Section */}
-              {portfolioImages.length > 0 && (
-                <Card className="bg-white shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-2xl flex items-center gap-2">
-                      <ImageIcon className="h-6 w-6 text-brand-primary" />
-                      Çalışmalarımız
-                    </CardTitle>
-                    <CardDescription>
-                      Kaliteli hizmetimizin örneklerini keşfedin
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {portfolioImages.slice(0, 8).map((image) => (
-                        <div key={image.id} className="group">
-                          <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-md group-hover:shadow-lg transition-all duration-300">
-                            <img 
-                              src={image.url} 
-                              alt={image.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400";
-                              }}
-                            />
-                          </div>
-                          <h3 className="mt-3 font-medium text-center capitalize">{image.title}</h3>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Services Section */}
-              {services.length > 0 && (
-                <Card className="bg-white shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-2xl flex items-center gap-2">
-                      <Star className="h-6 w-6 text-brand-primary" />
-                      Hizmetlerimiz
-                    </CardTitle>
-                    <CardDescription>
-                      Size özel profesyonel hizmetler sunuyoruz
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {services.map((service) => (
-                        <div key={service.id} className="p-6 bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 rounded-xl border border-brand-primary/10">
-                          <div className="flex justify-between items-start mb-3">
-                            <h3 className="font-semibold text-lg">{service.name}</h3>
-                            <Badge variant="secondary" className="text-lg font-bold">₺{service.price}</Badge>
-                          </div>
-                          {service.description && (
-                            <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
-                              {service.description}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="h-4 w-4" />
-                            {service.duration_minutes} dakika
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Staff Section */}
-              {staff.length > 0 && (
-                <Card className="bg-white shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="text-2xl flex items-center gap-2">
-                      <Users className="h-6 w-6 text-brand-primary" />
-                      Uzman Ekibimiz
-                    </CardTitle>
-                    <CardDescription>
-                      Deneyimli ve profesyonel kadromuz
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {staff.map((member) => (
-                        <div key={member.id} className="text-center p-6 bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 rounded-xl border border-brand-primary/10">
-                          <User className="h-16 w-16 text-brand-primary mx-auto mb-4" />
-                          <h3 className="font-semibold text-lg mb-2">{member.name}</h3>
-                          {member.specialties && member.specialties.length > 0 && (
-                            <p className="text-muted-foreground text-sm">
-                              Uzmanlık: {member.specialties.join(', ')}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Call to Action */}
-              <div className="text-center py-12">
-                <h2 className="text-3xl font-bold mb-4">Hemen Randevu Alın</h2>
-                <p className="text-muted-foreground text-lg mb-8">Profesyonel hizmetimizden yararlanmak için randevunuzu oluşturun</p>
-                <Button 
-                  onClick={() => setStep(1)} 
-                  variant="brand" 
-                  size="lg"
-                  className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <CalendarIcon className="h-5 w-5 mr-2" />
-                  Randevu Al
-                </Button>
+                )}
+                {business.address && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span className="line-clamp-2">
+                      {business.address}
+                      {business.city && `, ${business.city}`}
+                      {business.district && `, ${business.district}`}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
-      ) : (
-        // Booking Steps
-        <div className="container mx-auto px-4 py-8">
-          {/* Back to main page button */}
-          <div className="mb-6">
-            <Button 
-              onClick={() => setStep(0)} 
-              variant="outline"
-              className="mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Ana Sayfaya Dön
-            </Button>
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-foreground flex items-center justify-center gap-2">
-                <Building className="h-6 w-6 text-brand-primary" />
-                {business.name} - Randevu Al
-              </h1>
-            </div>
-          </div>
 
-          <div className="max-w-4xl mx-auto">
-          {step === 6 ? (
-            // Success Step
-            <Card className="text-center">
-              <CardContent className="py-12">
-                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
-                <h2 className="text-2xl font-bold mb-4">Randevunuz Alındı!</h2>
-                <p className="text-muted-foreground mb-6">
-                  Randevu talebiniz başarıyla iletildi. İşletme en kısa sürede size dönüş yapacak.
-                </p>
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold mb-2">Randevu Detayları:</h3>
-                  <p><strong>Tarih:</strong> {selectedDate && format(selectedDate, 'dd MMMM yyyy', { locale: tr })}</p>
-                  <p><strong>Saat:</strong> {selectedTime}</p>
-                  <p><strong>Hizmetler:</strong> {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(', ')}</p>
-                  <p><strong>Toplam Ücret:</strong> ₺{getTotalPrice().toLocaleString('tr-TR')}</p>
-                </div>
-                <Button onClick={() => navigate('/')} variant="brand">
-                  Ana Sayfaya Dön
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Main Content */}
-              <div className="lg:col-span-2 space-y-6">
-                 {/* Step 1: Service Selection */}
-                {step === 1 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Hizmet Seçimi</CardTitle>
-                      <CardDescription>
-                        Almak istediğiniz hizmetleri seçin (birden fazla seçim yapabilirsiniz)
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {services.map((service) => (
-                          <Card 
-                            key={service.id}
+            {/* Portfolio Section */}
+            <div className="p-6">
+              <h2 className="text-lg font-semibold text-center mb-4">Portföy</h2>
+              {portfolioImages.length > 0 ? (
+                <div>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {portfolioImages
+                      .slice(portfolioPage * imagesPerPage, (portfolioPage + 1) * imagesPerPage)
+                      .map((image) => (
+                        <div
+                          key={image.id}
+                          className="aspect-square bg-muted rounded-lg overflow-hidden border-2 border-muted"
+                        >
+                          <img
+                            src={image.url}
+                            alt={image.title}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                          />
+                        </div>
+                      ))}
+                  </div>
+                  
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-4 mb-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPortfolioPage(Math.max(0, portfolioPage - 1))}
+                        disabled={portfolioPage === 0}
+                      >
+                        ←
+                      </Button>
+                      <div className="flex gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => (
+                          <div
+                            key={i}
                             className={cn(
-                              "cursor-pointer transition-all hover:shadow-md",
-                              selectedServices.includes(service.id) 
-                                ? "ring-2 ring-brand-primary bg-brand-primary/5" 
-                                : ""
+                              "w-2 h-2 rounded-full",
+                              i === portfolioPage ? "bg-brand-primary" : "bg-muted"
                             )}
-                            onClick={() => handleServiceToggle(service.id)}
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-semibold">{service.name}</h3>
-                                <Badge variant="secondary">₺{service.price}</Badge>
-                              </div>
-                              {service.description && (
-                                <p className="text-sm text-muted-foreground mb-2">
-                                  {service.description}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Clock className="h-4 w-4" />
-                                {service.duration_minutes} dakika
-                              </div>
-                            </CardContent>
-                          </Card>
+                          />
                         ))}
                       </div>
-                      <div className="flex justify-end mt-6">
-                        <Button 
-                          onClick={() => setStep(2)} 
-                          disabled={selectedServices.length === 0}
-                          variant="brand"
-                        >
-                          Devam Et
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPortfolioPage(Math.min(totalPages - 1, portfolioPage + 1))}
+                        disabled={portfolioPage === totalPages - 1}
+                      >
+                        →
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {Array.from({ length: 4 }, (_, i) => (
+                    <div
+                      key={i}
+                      className="aspect-square bg-muted rounded-lg border-2 border-muted flex items-center justify-center"
+                    >
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-                {/* Step 2: Staff Selection */}
-                {step === 2 && staff.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Personel Seçimi</CardTitle>
-                      <CardDescription>
-                        Hizmet almak istediğiniz personeli seçin (opsiyonel)
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        {/* Fark etmez seçeneği */}
+            {/* Footer */}
+            <div className="p-6 pt-0">
+              <Button 
+                onClick={() => setStep(1)} 
+                className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold py-3"
+                size="lg"
+              >
+                <CalendarIcon className="h-5 w-5 mr-2" />
+                Randevu Al
+              </Button>
+            </div>
+          </Card>
+        ) : step === 6 ? (
+          // Success Page
+          <Card className="bg-white shadow-xl">
+            <CardContent className="text-center py-12">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
+              <h2 className="text-2xl font-bold mb-4">Randevunuz Alındı!</h2>
+              <p className="text-muted-foreground mb-6">
+                Randevunuz başarıyla oluşturuldu. En kısa sürede size dönüş yapılacak.
+              </p>
+              <Button onClick={() => setStep(0)} variant="outline">
+                Ana Sayfaya Dön
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          // Booking Form - Expanded Layout
+          <div className="w-full max-w-4xl mx-auto">
+            <Card className="bg-white shadow-xl">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => step === 1 ? setStep(0) : setStep(step - 1)}
+                    className="p-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <CardTitle className="text-lg">{business.name}</CardTitle>
+                    <CardDescription>Randevu Al - Adım {step}/5</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                {step === 1 && (
+                  // Step 1: Service Selection
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Hizmet Seçimi</h3>
+                    <p className="text-muted-foreground mb-6">Almak istediğiniz hizmetleri seçin</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      {services.map((service) => (
                         <Card 
+                          key={service.id}
                           className={cn(
                             "cursor-pointer transition-all hover:shadow-md",
-                            selectedStaff === "" 
+                            selectedServices.includes(service.id) 
                               ? "ring-2 ring-brand-primary bg-brand-primary/5" 
                               : ""
                           )}
-                          onClick={() => setSelectedStaff("")}
+                          onClick={() => handleServiceToggle(service.id)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-semibold">{service.name}</h4>
+                              <Badge variant="secondary">₺{service.price}</Badge>
+                            </div>
+                            {service.description && (
+                              <p className="text-sm text-muted-foreground mb-2">{service.description}</p>
+                            )}
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Clock className="h-4 w-4" />
+                              {service.duration_minutes} dakika
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={() => setStep(2)} 
+                        disabled={selectedServices.length === 0}
+                        className="bg-brand-primary hover:bg-brand-primary/90"
+                      >
+                        Devam Et
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {step === 2 && (
+                  // Step 2: Staff Selection
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Personel Seçimi</h3>
+                    <p className="text-muted-foreground mb-6">Hizmet almak istediğiniz personeli seçin (opsiyonel)</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <Card 
+                        className={cn(
+                          "cursor-pointer transition-all hover:shadow-md",
+                          selectedStaff === "" ? "ring-2 ring-brand-primary bg-brand-primary/5" : ""
+                        )}
+                        onClick={() => setSelectedStaff("")}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Users className="h-6 w-6 text-brand-primary mt-1" />
+                            <div>
+                              <h4 className="font-semibold">Fark Etmez</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Müsait olan personel otomatik atanacak
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {staff.map((member) => (
+                        <Card 
+                          key={member.id}
+                          className={cn(
+                            "cursor-pointer transition-all hover:shadow-md",
+                            selectedStaff === member.id ? "ring-2 ring-brand-primary bg-brand-primary/5" : ""
+                          )}
+                          onClick={() => setSelectedStaff(member.id)}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-start gap-3">
-                              <Users className="h-6 w-6 text-brand-primary mt-1" />
+                              <User className="h-6 w-6 text-brand-primary mt-1" />
                               <div>
-                                <h3 className="font-semibold">Fark Etmez</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  Müsait olan personel otomatik atanacak
-                                </p>
+                                <h4 className="font-semibold">{member.name}</h4>
+                                {member.specialties && member.specialties.length > 0 && (
+                                  <p className="text-sm text-muted-foreground">
+                                    Uzmanlık: {member.specialties.join(', ')}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </CardContent>
                         </Card>
-
-                        {/* Personel listesi */}
-                        {staff.map((member) => (
-                          <Card 
-                            key={member.id}
-                            className={cn(
-                              "cursor-pointer transition-all hover:shadow-md",
-                              selectedStaff === member.id 
-                                ? "ring-2 ring-brand-primary bg-brand-primary/5" 
-                                : ""
-                            )}
-                            onClick={() => setSelectedStaff(member.id)}
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex items-start gap-3">
-                                <User className="h-6 w-6 text-brand-primary mt-1" />
-                                <div>
-                                  <h3 className="font-semibold">{member.name}</h3>
-                                  {member.specialties && member.specialties.length > 0 && (
-                                    <p className="text-sm text-muted-foreground">
-                                      Uzmanlık: {member.specialties.join(', ')}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <Button onClick={() => setStep(1)} variant="outline">
-                          <ArrowLeft className="h-4 w-4 mr-2" />
-                          Geri
-                        </Button>
-                        <Button 
-                          onClick={() => setStep(staff.length > 0 ? 3 : 2)} 
-                          variant="brand"
-                        >
-                          Devam Et
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      ))}
+                    </div>
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={() => setStep(3)} 
+                        className="bg-brand-primary hover:bg-brand-primary/90"
+                      >
+                        Devam Et
+                      </Button>
+                    </div>
+                  </div>
                 )}
 
-                {/* Step 3: Date Selection */}
                 {step === 3 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Tarih Seçimi</CardTitle>
-                      <CardDescription>
-                        Randevu almak istediğiniz tarihi seçin
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-center">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          disabled={(date) => 
-                            isBefore(date, startOfDay(new Date())) ||
-                            isAfter(date, addDays(new Date(), 30))
-                          }
-                          locale={tr}
-                          className="rounded-md border"
-                        />
-                      </div>
-                      <div className="flex justify-between mt-6">
-                        <Button onClick={() => setStep(staff.length > 0 ? 2 : 1)} variant="outline">
-                          <ArrowLeft className="h-4 w-4 mr-2" />
-                          Geri
-                        </Button>
-                        <Button 
-                          onClick={() => setStep(4)} 
-                          disabled={!selectedDate}
-                          variant="brand"
-                        >
-                          Devam Et
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  // Step 3: Date Selection
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Tarih Seçimi</h3>
+                    <p className="text-muted-foreground mb-6">Randevu almak istediğiniz tarihi seçin</p>
+                    <div className="flex justify-center mb-6">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        disabled={(date) => 
+                          isBefore(date, startOfDay(new Date())) ||
+                          isAfter(date, addDays(new Date(), 30))
+                        }
+                        locale={tr}
+                        className="rounded-md border"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={() => setStep(4)} 
+                        disabled={!selectedDate}
+                        className="bg-brand-primary hover:bg-brand-primary/90"
+                      >
+                        Devam Et
+                      </Button>
+                    </div>
+                  </div>
                 )}
 
-                {/* Step 4: Time Selection */}
                 {step === 4 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Saat Seçimi</CardTitle>
-                      <CardDescription>
-                        {selectedDate && format(selectedDate, 'dd MMMM yyyy', { locale: tr })} için uygun saatleri seçin
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                       {availableTimeSlots.length > 0 ? (
-                         <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                           {availableTimeSlots.map((time) => {
-                             const isOccupied = occupiedTimeSlots.includes(time);
-                             return (
-                               <Button
-                                 key={time}
-                                 variant={selectedTime === time ? "brand" : isOccupied ? "destructive" : "outline"}
-                                 onClick={() => !isOccupied && setSelectedTime(time)}
-                                 disabled={isOccupied}
-                                 className={cn(
-                                   "w-full relative",
-                                   isOccupied && "cursor-not-allowed opacity-60"
-                                 )}
-                               >
-                                 {time}
-                                 {isOccupied && (
-                                   <span className="ml-1 text-xs">DOLU</span>
-                                 )}
-                               </Button>
-                             );
-                           })}
-                         </div>
-                       ) : (
-                         <div className="text-center py-8">
-                           <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                           <p className="text-muted-foreground mb-2">Bu tarih için uygun saat bulunmuyor.</p>
-                           {selectedStaff && selectedStaff !== "" && (
-                             <p className="text-sm text-muted-foreground">
-                               Seçilen personelin bu tarihte müsait saati bulunmuyor.
-                             </p>
-                           )}
-                         </div>
-                       )}
-                      <div className="flex justify-between mt-6">
-                        <Button onClick={() => setStep(3)} variant="outline">
-                          <ArrowLeft className="h-4 w-4 mr-2" />
-                          Geri
-                        </Button>
-                        <Button 
-                          onClick={() => setStep(5)} 
-                          disabled={!selectedTime}
-                          variant="brand"
-                        >
-                          Devam Et
-                        </Button>
+                  // Step 4: Time Selection
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Saat Seçimi</h3>
+                    <p className="text-muted-foreground mb-6">
+                      {selectedDate && format(selectedDate, 'dd MMMM yyyy', { locale: tr })} için uygun saatleri seçin
+                    </p>
+                    {availableTimeSlots.length > 0 ? (
+                      <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mb-6">
+                        {availableTimeSlots.map((time) => {
+                          const isOccupied = occupiedTimeSlots.includes(time);
+                          return (
+                            <Button
+                              key={time}
+                              variant={selectedTime === time ? "default" : isOccupied ? "destructive" : "outline"}
+                              onClick={() => !isOccupied && setSelectedTime(time)}
+                              disabled={isOccupied}
+                              className={cn(
+                                "w-full relative",
+                                selectedTime === time && "bg-brand-primary hover:bg-brand-primary/90",
+                                isOccupied && "cursor-not-allowed opacity-60"
+                              )}
+                            >
+                              {time}
+                              {isOccupied && <span className="ml-1 text-xs">DOLU</span>}
+                            </Button>
+                          );
+                        })}
                       </div>
-                    </CardContent>
-                  </Card>
+                    ) : (
+                      <div className="text-center py-8 mb-6">
+                        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground mb-2">Bu tarih için uygun saat bulunmuyor.</p>
+                      </div>
+                    )}
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={() => setStep(5)} 
+                        disabled={!selectedTime}
+                        className="bg-brand-primary hover:bg-brand-primary/90"
+                      >
+                        Devam Et
+                      </Button>
+                    </div>
+                  </div>
                 )}
 
-                {/* Step 5: Customer Information */}
                 {step === 5 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>İletişim Bilgileri</CardTitle>
-                      <CardDescription>
-                        Randevu onayı için iletişim bilgilerinizi girin
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+                  // Step 5: Customer Information
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">İletişim Bilgileri</h3>
+                    <p className="text-muted-foreground mb-6">Randevu onayı için iletişim bilgilerinizi girin</p>
+                    <div className="space-y-4 mb-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="firstName">Ad *</Label>
@@ -942,116 +803,23 @@ const PublicBooking = () => {
                           rows={3}
                         />
                       </div>
-                      <div className="flex justify-between">
-                        <Button onClick={() => setStep(4)} variant="outline">
-                          <ArrowLeft className="h-4 w-4 mr-2" />
-                          Geri
-                        </Button>
-                        <Button 
-                          onClick={handleBookingSubmit}
-                          disabled={!customerInfo.firstName || !customerInfo.lastName || !customerInfo.phone}
-                          variant="brand"
-                        >
-                          Randevu Al
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Step Indicator */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Randevu Süreci</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                     <div className="space-y-3">
-                       {[
-                         { step: 1, title: "Hizmet Seçimi", icon: Star },
-                         { step: 2, title: "Personel Seçimi", icon: User },
-                         { step: 3, title: "Tarih Seçimi", icon: CalendarIcon },
-                         { step: 4, title: "Saat Seçimi", icon: Clock },
-                         { step: 5, title: "İletişim Bilgileri", icon: Phone },
-                       ].map(({ step: stepNum, title, icon: Icon }) => (
-                         <div 
-                           key={stepNum}
-                           className={cn(
-                             "flex items-center gap-3 p-2 rounded-lg",
-                             step === stepNum ? "bg-brand-primary/10 text-brand-primary" : 
-                             step > stepNum ? "text-green-600" : "text-muted-foreground"
-                           )}
-                         >
-                           <Icon className="h-4 w-4" />
-                           <span className="text-sm font-medium">{title}</span>
-                           {step > stepNum && <CheckCircle className="h-4 w-4 ml-auto" />}
-                         </div>
-                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Booking Summary */}
-                {(selectedServices.length > 0 || selectedDate || selectedTime) && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Randevu Özeti</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {selectedServices.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-sm text-muted-foreground mb-2">Seçilen Hizmetler:</h4>
-                          {services
-                            .filter(service => selectedServices.includes(service.id))
-                            .map(service => (
-                              <div key={service.id} className="flex justify-between text-sm">
-                                <span>{service.name}</span>
-                                <span>₺{service.price}</span>
-                              </div>
-                            ))
-                          }
-                        </div>
-                      )}
-                      
-                      {selectedDate && (
-                        <div>
-                          <h4 className="font-medium text-sm text-muted-foreground mb-1">Tarih:</h4>
-                          <p className="text-sm">{format(selectedDate, 'dd MMMM yyyy', { locale: tr })}</p>
-                        </div>
-                      )}
-                      
-                      {selectedTime && (
-                        <div>
-                          <h4 className="font-medium text-sm text-muted-foreground mb-1">Saat:</h4>
-                          <p className="text-sm">{selectedTime}</p>
-                        </div>
-                      )}
-                      
-                      {selectedServices.length > 0 && (
-                        <>
-                          <div className="border-t pt-3">
-                            <div className="flex justify-between text-sm">
-                              <span>Toplam Süre:</span>
-                              <span>{getTotalDuration()} dakika</span>
-                            </div>
-                            <div className="flex justify-between font-semibold">
-                              <span>Toplam Ücret:</span>
-                              <span>₺{getTotalPrice().toLocaleString('tr-TR')}</span>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={handleBookingSubmit}
+                        disabled={!customerInfo.firstName || !customerInfo.lastName || !customerInfo.phone}
+                        className="bg-brand-primary hover:bg-brand-primary/90"
+                      >
+                        Randevu Al
+                      </Button>
+                    </div>
+                  </div>
                 )}
-              </div>
-            </div>
-          )}
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
