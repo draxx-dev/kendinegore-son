@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "./Sidebar";
 import { Settings, LogOut } from "lucide-react";
 
@@ -77,7 +77,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm">
             <div className="flex justify-between items-center h-16 px-6">
               <div className="flex items-center gap-4">
-                <SidebarTrigger className="lg:hidden" />
                 <div>
                   <h1 className="text-xl font-semibold text-foreground">
                     Yönetim Paneli

@@ -10,7 +10,8 @@ import {
   Settings,
   Building,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Menu
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -22,10 +23,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const navigationItems = [
   { 
@@ -82,7 +83,7 @@ const businessItems = [
 ];
 
 export function DashboardSidebar() {
-  const { state } = useSidebar();
+  const { toggleSidebar, state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
@@ -99,8 +100,8 @@ export function DashboardSidebar() {
 
   const getNavClassName = (isActiveRoute: boolean) =>
     isActiveRoute 
-      ? "bg-primary/10 text-primary border-r-2 border-primary" 
-      : "hover:bg-secondary/30 hover:border-r-2 hover:border-border";
+      ? "bg-primary/10 text-primary" 
+      : "hover:bg-secondary/30";
 
   return (
     <Sidebar className={collapsed ? "w-20" : "w-80"} collapsible="icon">
@@ -116,7 +117,14 @@ export function DashboardSidebar() {
                 <p className="text-sm text-muted-foreground mt-1">Yönetim Paneli</p>
               </div>
             )}
-            <SidebarTrigger className={`${collapsed ? '' : 'ml-auto'} h-8 w-8 hover:bg-secondary/50`} />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleSidebar}
+              className={`${collapsed ? '' : 'ml-auto'} h-8 w-8 hover:bg-secondary/50`}
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
@@ -173,8 +181,8 @@ export function DashboardSidebar() {
                   <div 
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer group ${
                       businessItems.some(item => isActive(item.url)) 
-                        ? "bg-primary/10 text-primary border-r-2 border-primary" 
-                        : "hover:bg-secondary/30 hover:border-r-2 hover:border-border"
+                        ? "bg-primary/10 text-primary" 
+                        : "hover:bg-secondary/30"
                     }`}
                     onClick={() => !collapsed && setBusinessExpanded(!businessExpanded)}
                     title={collapsed ? "İşletme Yönetimi" : undefined}
