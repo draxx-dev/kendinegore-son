@@ -272,13 +272,13 @@ export function DashboardSidebar() {
         </SidebarGroup>
 
         {/* Settings */}
-        <div className="px-3 border-t border-border mt-1">
+        <div className="px-3 border-t border-border pt-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                  <NavLink 
                    to="/dashboard/settings" 
-                   className={({isActive}) => `flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
+                   className={({isActive}) => `flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
                    title={collapsed ? "Ayarlar" : undefined}
                  >
                   {({isActive}) => (
