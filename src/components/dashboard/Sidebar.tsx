@@ -107,7 +107,7 @@ export function DashboardSidebar() {
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarContent className="bg-white border-r border-border shadow-sm">
         {/* Header */}
-        <div className="p-4 border-b border-border">
+        <div className={`${collapsed ? 'p-2' : 'p-4'} border-b border-border`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
             {!collapsed && (
               <div>
@@ -140,12 +140,12 @@ export function DashboardSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={item.url} 
-                        end={item.url === "/dashboard"}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
-                        title={collapsed ? item.title : undefined}
-                      >
+                       <NavLink 
+                         to={item.url} 
+                         end={item.url === "/dashboard"}
+                         className={`flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
+                         title={collapsed ? item.title : undefined}
+                       >
                         <div className={`${collapsed ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
                           <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                         </div>
@@ -178,15 +178,15 @@ export function DashboardSidebar() {
               {/* Business Details with Expandable Submenu */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <div 
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 cursor-pointer group ${
-                      businessItems.some(item => isActive(item.url)) 
-                        ? "text-primary" 
-                        : "hover:bg-secondary/30"
-                    }`}
-                    onClick={() => !collapsed && setBusinessExpanded(!businessExpanded)}
-                    title={collapsed ? "İşletme Yönetimi" : undefined}
-                  >
+                   <div 
+                     className={`flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 cursor-pointer group ${
+                       businessItems.some(item => isActive(item.url)) 
+                         ? "text-primary" 
+                         : "hover:bg-secondary/30"
+                     }`}
+                     onClick={() => !collapsed && setBusinessExpanded(!businessExpanded)}
+                     title={collapsed ? "İşletme Yönetimi" : undefined}
+                   >
                     <div className={`${collapsed ? 'p-2' : 'p-2'} rounded-lg transition-colors ${
                       businessItems.some(item => isActive(item.url)) 
                         ? 'text-primary' 
@@ -256,7 +256,7 @@ export function DashboardSidebar() {
                     <SidebarMenuButton asChild>
                         <NavLink 
                           to={item.url} 
-                          className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
+                          className={`flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                           title={item.title}
                         >
                         <div className={`${collapsed ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
@@ -276,11 +276,11 @@ export function DashboardSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <NavLink 
-                  to="/dashboard/settings" 
-                  className={({isActive}) => `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
-                  title={collapsed ? "Ayarlar" : undefined}
-                >
+                 <NavLink 
+                   to="/dashboard/settings" 
+                   className={({isActive}) => `flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
+                   title={collapsed ? "Ayarlar" : undefined}
+                 >
                   {({isActive}) => (
                     <>
                       <div className={`${collapsed ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActive ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
