@@ -113,9 +113,9 @@ const Payments = () => {
 
       const summary = payments.reduce((acc, payment) => {
         const amount = Number(payment.amount);
-        acc.total_amount += amount;
-
+        
         if (payment.payment_status === 'completed') {
+          acc.total_amount += amount;
           acc.completed_count++;
           switch (payment.payment_method) {
             case 'cash':
@@ -255,6 +255,74 @@ const Payments = () => {
       setTotalExpenses(total);
     } catch (error) {
       console.error('Error fetching expenses:', error);
+    }
+  };
+
+  const handleCollectPayment = async (customerId: string) => {
+    try {
+      // First get appointment IDs for this customer
+      const { data: appointments, error: appointmentError } = await supabase
+        .from('appointments')
+        .select('id')
+        .eq('customer_id', customerId);
+
+      if (appointmentError) throw appointmentError;
+
+      if (!appointments || appointments.length === 0) {
+        toast({
+          title: "Hata",
+          description: "Bu müşteri için randevu bulunamadı.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const appointmentIds = appointments.map(a => a.id);
+
+      // Get all pending credit payments for this customer's appointments
+      const { data: pendingPayments, error: fetchError } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('payment_method', 'credit')
+        .eq('payment_status', 'pending')
+        .in('appointment_id', appointmentIds);
+
+      if (fetchError) throw fetchError;
+
+      if (!pendingPayments || pendingPayments.length === 0) {
+        toast({
+          title: "Hata",
+          description: "Bu müşteri için bekleyen ödeme bulunamadı.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update all pending payments to completed
+      const { error: updateError } = await supabase
+        .from('payments')
+        .update({
+          payment_status: 'completed',
+          payment_date: new Date().toISOString()
+        })
+        .in('id', pendingPayments.map(p => p.id));
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Başarılı!",
+        description: "Veresiye ödemeler tahsil edildi.",
+      });
+
+      // Refresh data
+      fetchPaymentData();
+      fetchCustomerDebts();
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Ödeme tahsil edilirken bir hata oluştu.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -479,7 +547,11 @@ const Payments = () => {
                     </Badge>
                   </div>
                   <div className="ml-4">
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleCollectPayment(debt.customer_id)}
+                    >
                       Tahsil Et
                     </Button>
                   </div>
