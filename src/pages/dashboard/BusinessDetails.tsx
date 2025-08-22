@@ -18,7 +18,7 @@ import {
   Phone,
   Mail,
   Clock,
-  Calendar
+  Calendar as CalendarIcon
 } from "lucide-react";
 
 interface Business {
@@ -366,7 +366,7 @@ const BusinessDetails = () => {
                   variant="brand"
                   size="sm"
                 >
-                  <Calendar className="h-4 w-4 mr-2" />
+                  <CalendarIcon className="h-4 w-4 mr-2" />
                   Önizleme Yap
                 </Button>
               </div>
