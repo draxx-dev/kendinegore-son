@@ -15,7 +15,10 @@ import {
   Download,
   Filter,
   Plus,
-  Receipt
+  Receipt,
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { CreateExpenseModal } from "@/components/expenses/CreateExpenseModal";
 
@@ -36,6 +39,14 @@ interface CustomerDebt {
   appointment_count: number;
   oldest_payment_date?: string;
   expected_payment_date?: string;
+  appointments?: Array<{
+    id: string;
+    appointment_date: string;
+    start_time: string;
+    service_name: string;
+    staff_name: string;
+    amount: number;
+  }>;
 }
 
 const Payments = () => {
@@ -54,6 +65,8 @@ const Payments = () => {
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [debtSortBy, setDebtSortBy] = useState<'debt' | 'oldest' | 'expected'>('debt');
+  const [expandedDebt, setExpandedDebt] = useState<string | null>(null);
+  const [creditStats, setCreditStats] = useState({ collected: 0, pending: 0 });
 
   const { toast } = useToast();
 
@@ -156,6 +169,19 @@ const Payments = () => {
 
   const fetchCustomerDebts = async () => {
     try {
+      // Get credit stats
+      const { data: allCreditPayments, error: statsError } = await supabase
+        .from('payments')
+        .select('payment_status')
+        .eq('payment_method', 'credit');
+
+      if (statsError) throw statsError;
+
+      const collected = allCreditPayments.filter(p => p.payment_status === 'completed').length;
+      const pending = allCreditPayments.filter(p => p.payment_status === 'pending').length;
+      setCreditStats({ collected, pending });
+
+      // Get pending credit payments with detailed information
       const { data: creditPayments, error } = await supabase
         .from('payments')
         .select(`
@@ -164,7 +190,12 @@ const Payments = () => {
           created_at,
           expected_payment_date,
           appointments!inner(
-            customers!inner(id, first_name, last_name, phone)
+            id,
+            appointment_date,
+            start_time,
+            customers!inner(id, first_name, last_name, phone),
+            services!inner(name),
+            staff(name)
           )
         `)
         .eq('payment_method', 'credit')
@@ -176,12 +207,23 @@ const Payments = () => {
 
       creditPayments.forEach(payment => {
         const customer = payment.appointments.customers;
+        const appointment = payment.appointments;
         const customerId = customer.id;
+        
+        const appointmentDetail = {
+          id: appointment.id,
+          appointment_date: appointment.appointment_date,
+          start_time: appointment.start_time,
+          service_name: appointment.services?.name || 'Bilinmiyor',
+          staff_name: appointment.staff?.name || 'Belirtilmemiş',
+          amount: Number(payment.amount)
+        };
         
         if (debtsMap.has(customerId)) {
           const existing = debtsMap.get(customerId)!;
           existing.total_debt += Number(payment.amount);
           existing.appointment_count++;
+          existing.appointments?.push(appointmentDetail);
           
           // Update oldest payment date
           if (!existing.oldest_payment_date || payment.created_at < existing.oldest_payment_date) {
@@ -202,7 +244,8 @@ const Payments = () => {
             total_debt: Number(payment.amount),
             appointment_count: 1,
             oldest_payment_date: payment.created_at,
-            expected_payment_date: payment.expected_payment_date || undefined
+            expected_payment_date: payment.expected_payment_date || undefined,
+            appointments: [appointmentDetail]
           });
         }
       });
@@ -468,9 +511,15 @@ const Payments = () => {
                 <FileText className="h-6 w-6 text-orange-600" />
               </div>
             </div>
-            <div className="flex items-center mt-2 text-sm text-orange-600">
-              <TrendingDown className="h-4 w-4 mr-1" />
-              {paymentSummary.pending_count} bekliyor
+            <div className="flex flex-col mt-2 text-sm text-orange-600 space-y-1">
+              <div className="flex items-center">
+                <TrendingDown className="h-4 w-4 mr-1" />
+                {creditStats.pending} kişiden bekleniyor
+              </div>
+              <div className="flex items-center text-green-600">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                {creditStats.collected} kişiden tahsil edildi
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -524,37 +573,77 @@ const Payments = () => {
           {customerDebts.length > 0 ? (
             <div className="space-y-3">
               {customerDebts.map((debt) => (
-                <div key={debt.customer_id} className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-orange-200">
-                  <div className="flex-1">
-                    <div className="font-medium text-foreground">
-                      {debt.customer_name}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {debt.customer_phone} • {debt.appointment_count} randevu
-                    </div>
-                    {debt.expected_payment_date && (
-                      <div className="text-sm text-blue-600 mt-1">
-                        Beklenen: {new Date(debt.expected_payment_date).toLocaleDateString('tr-TR')}
+                <div key={debt.customer_id} className="bg-white/50 rounded-lg border border-orange-200">
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex-1">
+                      <div className="font-medium text-foreground">
+                        {debt.customer_name}
                       </div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-orange-600">
-                      ₺{debt.total_debt}
+                      <div className="text-sm text-muted-foreground">
+                        {debt.customer_phone} • {debt.appointment_count} randevu
+                      </div>
+                      {debt.expected_payment_date && (
+                        <div className="text-sm text-blue-600 mt-1">
+                          Beklenen: {new Date(debt.expected_payment_date).toLocaleDateString('tr-TR')}
+                        </div>
+                      )}
                     </div>
-                    <Badge variant="outline" className="text-orange-600 border-orange-200">
-                      Borçlu
-                    </Badge>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-orange-600">
+                        ₺{debt.total_debt}
+                      </div>
+                      <Badge variant="outline" className="text-orange-600 border-orange-200">
+                        Borçlu
+                      </Badge>
+                    </div>
+                    <div className="ml-4 flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => setExpandedDebt(expandedDebt === debt.customer_id ? null : debt.customer_id)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        {expandedDebt === debt.customer_id ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleCollectPayment(debt.customer_id)}
+                      >
+                        Tahsil Et
+                      </Button>
+                    </div>
                   </div>
-                  <div className="ml-4">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleCollectPayment(debt.customer_id)}
-                    >
-                      Tahsil Et
-                    </Button>
-                  </div>
+                  
+                  {expandedDebt === debt.customer_id && debt.appointments && (
+                    <div className="border-t border-orange-200 p-4 bg-orange-50/50">
+                      <h4 className="font-semibold text-foreground mb-3">Randevu Detayları</h4>
+                      <div className="space-y-3">
+                        {debt.appointments.map((appointment) => (
+                          <div key={appointment.id} className="bg-white/80 p-3 rounded-md border border-orange-100">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <div className="font-medium text-foreground">
+                                  {appointment.service_name}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  Personel: {appointment.staff_name}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  Tarih: {new Date(appointment.appointment_date).toLocaleDateString('tr-TR')} - {appointment.start_time}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-bold text-orange-600">
+                                  ₺{appointment.amount}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
