@@ -13,8 +13,11 @@ import {
   DollarSign,
   FileText,
   Download,
-  Filter
+  Filter,
+  Plus,
+  Receipt
 } from "lucide-react";
+import { CreateExpenseModal } from "@/components/expenses/CreateExpenseModal";
 
 interface PaymentSummary {
   total_amount: number;
@@ -46,12 +49,15 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [dateRange, setDateRange] = useState<'today' | 'week' | 'month'>('today');
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [totalExpenses, setTotalExpenses] = useState(0);
 
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPaymentData();
     fetchCustomerDebts();
+    fetchExpenses();
   }, [selectedDate, dateRange]);
 
   const getDateRange = () => {
@@ -192,6 +198,25 @@ const Payments = () => {
     }
   };
 
+  const fetchExpenses = async () => {
+    try {
+      const { start, end } = getDateRange();
+      
+      const { data: expenses, error } = await supabase
+        .from('expenses')
+        .select('amount')
+        .gte('expense_date', start)
+        .lte('expense_date', end);
+
+      if (error) throw error;
+
+      const total = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+      setTotalExpenses(total);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    }
+  };
+
   const exportReport = () => {
     toast({
       title: "Rapor Hazırlanıyor",
@@ -221,10 +246,20 @@ const Payments = () => {
             Gelir raporları ve ödeme takibi.
           </p>
         </div>
-        <Button variant="outline" onClick={exportReport} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Rapor İndir
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowExpenseModal(true)}
+            variant="brand" 
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Gider Ekle
+          </Button>
+          <Button variant="outline" onClick={exportReport} className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Rapor İndir
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -330,6 +365,23 @@ const Payments = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-700 text-sm font-medium">Toplam Gider</p>
+                <p className="text-2xl font-bold text-red-800">₺{totalExpenses}</p>
+              </div>
+              <div className="p-3 bg-red-200 rounded-full">
+                <Receipt className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+            <div className="text-sm text-red-600 mt-2">
+              Net Kar: ₺{paymentSummary.total_amount - totalExpenses}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Customer Debts */}
@@ -418,6 +470,16 @@ const Payments = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Create Expense Modal */}
+      <CreateExpenseModal
+        open={showExpenseModal}
+        onOpenChange={setShowExpenseModal}
+        onSuccess={() => {
+          fetchExpenses();
+          fetchPaymentData();
+        }}
+      />
     </div>
   );
 };

@@ -17,6 +17,7 @@ export type Database = {
       appointments: {
         Row: {
           appointment_date: string
+          appointment_group_id: string | null
           business_id: string
           created_at: string
           customer_id: string
@@ -32,6 +33,7 @@ export type Database = {
         }
         Insert: {
           appointment_date: string
+          appointment_group_id?: string | null
           business_id: string
           created_at?: string
           customer_id: string
@@ -47,6 +49,7 @@ export type Database = {
         }
         Update: {
           appointment_date?: string
+          appointment_group_id?: string | null
           business_id?: string
           created_at?: string
           customer_id?: string
@@ -176,6 +179,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          business_id: string
+          category: string
+          created_at: string
+          description: string
+          expense_date: string
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          business_id: string
+          category: string
+          created_at?: string
+          description: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          category?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {

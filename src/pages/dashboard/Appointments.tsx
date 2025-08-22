@@ -6,6 +6,7 @@ import { Calendar as CalendarIcon, Plus, Clock, User, Scissors, Filter } from "l
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateAppointmentModal } from "@/components/appointments/CreateAppointmentModal";
+import { PaymentModal } from "@/components/appointments/PaymentModal";
 
 interface Appointment {
   id: string;
@@ -15,6 +16,7 @@ interface Appointment {
   status: string;
   total_price: number;
   notes: string | null;
+  appointment_group_id: string;
   customers: {
     first_name: string;
     last_name: string;
@@ -29,18 +31,74 @@ interface Appointment {
   } | null;
 }
 
+interface GroupedAppointment {
+  appointment_group_id: string;
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  total_price: number;
+  notes: string | null;
+  customers: {
+    first_name: string;
+    last_name: string;
+    phone: string;
+  };
+  services: Array<{
+    name: string;
+    duration_minutes: number;
+  }>;
+  staff: {
+    name: string;
+  } | null;
+  appointment_ids: string[];
+}
+
 const Appointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [groupedAppointments, setGroupedAppointments] = useState<GroupedAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<GroupedAppointment | null>(null);
 
   const { toast } = useToast();
 
   useEffect(() => {
     fetchAppointments();
   }, [selectedDate, statusFilter]);
+
+  const groupAppointments = (appointments: Appointment[]): GroupedAppointment[] => {
+    const groupMap = new Map<string, GroupedAppointment>();
+    
+    appointments.forEach(appointment => {
+      const groupId = appointment.appointment_group_id;
+      
+      if (groupMap.has(groupId)) {
+        const existing = groupMap.get(groupId)!;
+        existing.services.push(appointment.services);
+        existing.appointment_ids.push(appointment.id);
+      } else {
+        groupMap.set(groupId, {
+          appointment_group_id: groupId,
+          appointment_date: appointment.appointment_date,
+          start_time: appointment.start_time,
+          end_time: appointment.end_time,
+          status: appointment.status,
+          total_price: appointment.total_price,
+          notes: appointment.notes,
+          customers: appointment.customers,
+          services: [appointment.services],
+          staff: appointment.staff,
+          appointment_ids: [appointment.id]
+        });
+      }
+    });
+    
+    return Array.from(groupMap.values());
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -66,6 +124,10 @@ const Appointments = () => {
 
       if (error) throw error;
       setAppointments(data || []);
+      
+      // Group appointments by appointment_group_id
+      const grouped = groupAppointments(data || []);
+      setGroupedAppointments(grouped);
     } catch (error) {
       toast({
         title: "Hata",
@@ -77,14 +139,21 @@ const Appointments = () => {
     }
   };
 
-  const updateAppointmentStatus = async (appointmentId: string, newStatus: string) => {
+  const updateAppointmentStatus = async (groupedAppointment: GroupedAppointment, newStatus: string) => {
     try {
+      // Update all appointments in the group
       const { error } = await supabase
         .from('appointments')
         .update({ status: newStatus })
-        .eq('id', appointmentId);
+        .in('id', groupedAppointment.appointment_ids);
 
       if (error) throw error;
+
+      // If completing appointment, show payment modal
+      if (newStatus === 'completed') {
+        setSelectedAppointment(groupedAppointment);
+        setShowPaymentModal(true);
+      }
 
       toast({
         title: "Başarılı!",
@@ -114,29 +183,29 @@ const Appointments = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getStatusActions = (appointment: Appointment) => {
+  const getStatusActions = (groupedAppointment: GroupedAppointment) => {
     const actions = [];
     
-    if (appointment.status === 'scheduled') {
+    if (groupedAppointment.status === 'scheduled') {
       actions.push(
         <Button 
           key="confirm"
           size="sm" 
           variant="outline"
-          onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+          onClick={() => updateAppointmentStatus(groupedAppointment, 'confirmed')}
         >
           Onayla
         </Button>
       );
     }
     
-    if (['scheduled', 'confirmed'].includes(appointment.status)) {
+    if (['scheduled', 'confirmed'].includes(groupedAppointment.status)) {
       actions.push(
         <Button 
           key="complete"
           size="sm" 
           variant="brand"
-          onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
+          onClick={() => updateAppointmentStatus(groupedAppointment, 'completed')}
         >
           Tamamla
         </Button>
@@ -147,7 +216,7 @@ const Appointments = () => {
           size="sm" 
           variant="outline"
           className="text-destructive hover:text-destructive"
-          onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+          onClick={() => updateAppointmentStatus(groupedAppointment, 'cancelled')}
         >
           İptal
         </Button>
@@ -158,10 +227,10 @@ const Appointments = () => {
   };
 
   const todayStats = {
-    total: appointments.length,
-    confirmed: appointments.filter(a => a.status === 'confirmed').length,
-    completed: appointments.filter(a => a.status === 'completed').length,
-    revenue: appointments
+    total: groupedAppointments.length,
+    confirmed: groupedAppointments.filter(a => a.status === 'confirmed').length,
+    completed: groupedAppointments.filter(a => a.status === 'completed').length,
+    revenue: groupedAppointments
       .filter(a => a.status === 'completed')
       .reduce((sum, a) => sum + Number(a.total_price), 0)
   };
@@ -259,8 +328,8 @@ const Appointments = () => {
 
       {/* Appointments List */}
       <div className="space-y-4">
-        {appointments.map((appointment) => (
-          <Card key={appointment.id} className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300">
+        {groupedAppointments.map((groupedAppointment) => (
+          <Card key={groupedAppointment.appointment_group_id} className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="flex-1">
@@ -268,10 +337,10 @@ const Appointments = () => {
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">
-                        {appointment.start_time.slice(0, 5)} - {appointment.end_time.slice(0, 5)}
+                        {groupedAppointment.start_time.slice(0, 5)} - {groupedAppointment.end_time.slice(0, 5)}
                       </span>
                     </div>
-                    {getStatusBadge(appointment.status)}
+                    {getStatusBadge(groupedAppointment.status)}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -279,10 +348,10 @@ const Appointments = () => {
                       <User className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <div className="font-medium">
-                          {appointment.customers.first_name} {appointment.customers.last_name}
+                          {groupedAppointment.customers.first_name} {groupedAppointment.customers.last_name}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {appointment.customers.phone}
+                          {groupedAppointment.customers.phone}
                         </div>
                       </div>
                     </div>
@@ -290,32 +359,39 @@ const Appointments = () => {
                     <div className="flex items-center gap-2">
                       <Scissors className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <div className="font-medium">{appointment.services.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {appointment.services.duration_minutes} dakika
+                        <div className="font-medium">
+                          {groupedAppointment.services.map(service => service.name).join(", ")}
                         </div>
+                        <div className="text-sm text-muted-foreground">
+                          {groupedAppointment.services.reduce((total, service) => total + service.duration_minutes, 0)} dakika
+                        </div>
+                        {groupedAppointment.services.length > 1 && (
+                          <div className="text-xs text-muted-foreground">
+                            {groupedAppointment.services.length} hizmet
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div>
-                      <div className="font-medium">₺{appointment.total_price}</div>
-                      {appointment.staff && (
+                      <div className="font-medium">₺{groupedAppointment.total_price}</div>
+                      {groupedAppointment.staff && (
                         <div className="text-sm text-muted-foreground">
-                          {appointment.staff.name}
+                          {groupedAppointment.staff.name}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {appointment.notes && (
+                  {groupedAppointment.notes && (
                     <div className="mt-3 text-sm text-muted-foreground bg-gray-50 p-2 rounded">
-                      {appointment.notes}
+                      {groupedAppointment.notes}
                     </div>
                   )}
                 </div>
 
                 <div className="flex gap-2">
-                  {getStatusActions(appointment)}
+                  {getStatusActions(groupedAppointment)}
                 </div>
               </div>
             </CardContent>
@@ -323,7 +399,7 @@ const Appointments = () => {
         ))}
       </div>
 
-      {appointments.length === 0 && (
+      {groupedAppointments.length === 0 && (
         <Card className="bg-white/50 backdrop-blur-sm border-brand-primary/10">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
@@ -382,6 +458,21 @@ const Appointments = () => {
         onOpenChange={setShowCreateModal}
         onSuccess={fetchAppointments}
       />
+
+      {/* Payment Modal */}
+      {selectedAppointment && (
+        <PaymentModal
+          open={showPaymentModal}
+          onOpenChange={setShowPaymentModal}
+          appointmentId={selectedAppointment.appointment_ids[0]} // Use first appointment ID for payment
+          totalAmount={selectedAppointment.total_price}
+          customerName={`${selectedAppointment.customers.first_name} ${selectedAppointment.customers.last_name}`}
+          onSuccess={() => {
+            fetchAppointments();
+            setSelectedAppointment(null);
+          }}
+        />
+      )}
     </div>
   );
 };

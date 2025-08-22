@@ -160,7 +160,10 @@ export const CreateAppointmentModal = ({
       const totalPrice = calculateTotalPrice();
       const endTime = calculateEndTime(formData.start_time, totalDuration);
 
-      // Create appointments for each selected service
+      // Generate a single group ID for all services in this appointment
+      const appointmentGroupId = crypto.randomUUID();
+
+      // Create appointments for each selected service with the same group_id
       const appointmentPromises = selectedServices.map(async (serviceId) => {
         const { error } = await supabase
           .from('appointments')
@@ -173,6 +176,7 @@ export const CreateAppointmentModal = ({
             start_time: formData.start_time,
             end_time: endTime,
             total_price: totalPrice,
+            appointment_group_id: appointmentGroupId,
             notes: formData.notes || null,
             status: 'scheduled'
           }]);
