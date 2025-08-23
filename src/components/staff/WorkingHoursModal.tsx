@@ -106,28 +106,48 @@ export const WorkingHoursModal = ({
 
     try {
       const businessId = await getBusinessId();
+      
+      // Validate required fields
+      if (!businessId) {
+        throw new Error("İşletme ID'si alınamadı");
+      }
+      if (!staffId) {
+        throw new Error("Personel ID'si bulunamadı");
+      }
 
       // First, delete existing working hours for this staff
-      await supabase
+      const { error: deleteError } = await supabase
         .from('working_hours')
         .delete()
         .eq('staff_id', staffId);
 
-      // Then insert new working hours
-      const hoursToInsert = workingHours.map(wh => ({
-        business_id: businessId,
-        staff_id: staffId,
-        day_of_week: wh.day_of_week,
-        start_time: wh.start_time,
-        end_time: wh.end_time,
-        is_closed: wh.is_closed
-      }));
+      if (deleteError) {
+        console.error('Delete error:', deleteError);
+        throw deleteError;
+      }
 
-      const { error } = await supabase
+      // Then insert new working hours - only include non-null values
+      const hoursToInsert = workingHours
+        .filter(wh => wh.start_time && wh.end_time) // Only include hours with valid times
+        .map(wh => ({
+          business_id: businessId,
+          staff_id: staffId,
+          day_of_week: wh.day_of_week,
+          start_time: wh.start_time,
+          end_time: wh.end_time,
+          is_closed: wh.is_closed || false
+        }));
+
+      console.log('Inserting working hours:', hoursToInsert);
+
+      const { error: insertError } = await supabase
         .from('working_hours')
         .insert(hoursToInsert);
 
-      if (error) throw error;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
+      }
 
       toast({
         title: "Başarılı!",
@@ -135,10 +155,11 @@ export const WorkingHoursModal = ({
       });
 
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Save error:', error);
       toast({
         title: "Hata",
-        description: "Çalışma saatleri kaydedilirken bir hata oluştu.",
+        description: error?.message || "Çalışma saatleri kaydedilirken bir hata oluştu.",
         variant: "destructive",
       });
     } finally {
