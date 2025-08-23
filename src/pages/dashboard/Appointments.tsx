@@ -32,6 +32,11 @@ interface Appointment {
     id: string;
     name: string;
   } | null;
+  payments: Array<{
+    payment_method: string;
+    payment_status: string;
+    amount: number;
+  }> | null;
 }
 
 interface GroupedAppointment {
@@ -56,6 +61,11 @@ interface GroupedAppointment {
     name: string;
   } | null;
   appointment_ids: string[];
+  payments: Array<{
+    payment_method: string;
+    payment_status: string;
+    amount: number;
+  }>;
 }
 
 const Appointments = () => {
@@ -85,6 +95,10 @@ const Appointments = () => {
         const existing = groupMap.get(groupId)!;
         existing.services.push(appointment.services);
         existing.appointment_ids.push(appointment.id);
+        // Payments'i birleştir
+        if (appointment.payments) {
+          existing.payments.push(...appointment.payments);
+        }
       } else {
         groupMap.set(groupId, {
           appointment_group_id: groupId,
@@ -97,7 +111,8 @@ const Appointments = () => {
           customers: appointment.customers,
           services: [appointment.services],
           staff: appointment.staff,
-          appointment_ids: [appointment.id]
+          appointment_ids: [appointment.id],
+          payments: appointment.payments || []
         });
       }
     });
@@ -113,7 +128,8 @@ const Appointments = () => {
           *,
           customers(first_name, last_name, phone),
           services(name, duration_minutes),
-          staff(id, name)
+          staff(id, name),
+          payments(payment_method, payment_status, amount)
         `)
         .order('start_time', { ascending: true });
 
@@ -434,6 +450,19 @@ const Appointments = () => {
                         {groupedAppointment.staff && (
                           <div className="text-sm text-muted-foreground">
                             {groupedAppointment.staff.name}
+                          </div>
+                        )}
+                        {/* Ödeme bilgisi göster */}
+                        {groupedAppointment.payments && groupedAppointment.payments.length > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            {groupedAppointment.payments.map(payment => {
+                              const paymentLabels = {
+                                cash: 'Nakit',
+                                card: 'Kart',
+                                credit: 'Veresiye'
+                              };
+                              return paymentLabels[payment.payment_method as keyof typeof paymentLabels] || payment.payment_method;
+                            }).join(', ')}
                           </div>
                         )}
                       </div>

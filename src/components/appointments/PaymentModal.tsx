@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,14 @@ export const PaymentModal = ({
   });
 
   const { toast } = useToast();
+
+  // Tutar değiştiğinde formu güncelle
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      amount: totalAmount
+    }));
+  }, [totalAmount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
