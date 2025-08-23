@@ -228,6 +228,34 @@ const Appointments = () => {
       );
     }
 
+    // Tamamlanan randevular için düzenleme seçenekleri
+    if (groupedAppointment.status === 'completed') {
+      actions.push(
+        <Button 
+          key="revert"
+          size="sm" 
+          variant="outline"
+          onClick={() => updateAppointmentStatus(groupedAppointment, 'confirmed')}
+          className="text-blue-600 hover:text-blue-700"
+        >
+          Tamamlandı İptal Et
+        </Button>
+      );
+      actions.push(
+        <Button 
+          key="payment"
+          size="sm" 
+          variant="outline"
+          onClick={() => {
+            setSelectedAppointment(groupedAppointment);
+            setShowPaymentModal(true);
+          }}
+        >
+          Ödemeyi Düzenle
+        </Button>
+      );
+    }
+
     return actions;
   };
 
