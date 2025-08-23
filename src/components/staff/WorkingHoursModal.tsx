@@ -126,11 +126,11 @@ export const WorkingHoursModal = ({
         throw deleteError;
       }
 
-      // Then insert new working hours - only include non-null values
+      // Then insert new working hours - staff için business_id null olmalı
       const hoursToInsert = workingHours
         .filter(wh => wh.start_time && wh.end_time) // Only include hours with valid times
         .map(wh => ({
-          business_id: businessId,
+          business_id: null, // Personel çalışma saatleri için business_id null olmalı
           staff_id: staffId,
           day_of_week: wh.day_of_week,
           start_time: wh.start_time,
