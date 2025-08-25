@@ -416,115 +416,163 @@ const PublicBooking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="w-full max-w-md mx-auto p-4">
         {step === 0 ? (
-          // Main Business Card
-          <Card className="bg-white shadow-xl overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-brand-primary to-brand-primary-dark text-white p-6 shadow-brand">
-              <h1 className="text-xl font-bold text-center mb-4">{business.name}</h1>
-              <div className="space-y-2 text-sm">
-                {business.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    <span>{business.phone}</span>
-                  </div>
-                )}
-                {business.address && (
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span className="line-clamp-2">
-                      {business.address}
-                      {business.city && `, ${business.city}`}
-                      {business.district && `, ${business.district}`}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Portfolio Section */}
-            <div className="p-6">
-              <h2 className="text-lg font-semibold text-center mb-4">Portföy</h2>
-              {portfolioImages.length > 0 ? (
-                <div>
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    {portfolioImages
-                      .slice(portfolioPage * imagesPerPage, (portfolioPage + 1) * imagesPerPage)
-                      .map((image) => (
-                        <div
-                          key={image.id}
-                          className="aspect-square bg-muted rounded-lg overflow-hidden border-2 border-muted"
-                        >
-                          <img
-                            src={image.url}
-                            alt={image.title}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                          />
-                        </div>
-                      ))}
-                  </div>
-                  
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-4 mb-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPortfolioPage(Math.max(0, portfolioPage - 1))}
-                        disabled={portfolioPage === 0}
-                      >
-                        ←
-                      </Button>
-                      <div className="flex gap-1">
-                        {Array.from({ length: totalPages }, (_, i) => (
-                          <div
-                            key={i}
-                            className={cn(
-                              "w-2 h-2 rounded-full",
-                              i === portfolioPage ? "bg-brand-primary" : "bg-muted"
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPortfolioPage(Math.min(totalPages - 1, portfolioPage + 1))}
-                        disabled={portfolioPage === totalPages - 1}
-                      >
-                        →
-                      </Button>
+          // Modern Business Card
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200/50">
+            {/* Gradient Header */}
+            <div className="relative bg-gradient-to-br from-brand-primary via-brand-primary-dark to-brand-secondary text-white">
+              <div className="absolute inset-0 bg-black/10"></div>
+              <div className="relative p-8 text-center">
+                <div className="w-20 h-20 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center backdrop-blur-sm">
+                  <Building className="h-10 w-10 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold mb-2">{business.name}</h1>
+                <div className="space-y-2 text-sm opacity-90">
+                  {business.phone && (
+                    <div className="flex items-center justify-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      <span>{business.phone}</span>
+                    </div>
+                  )}
+                  {business.address && (
+                    <div className="flex items-center justify-center gap-2 max-w-xs mx-auto">
+                      <MapPin className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-center text-xs leading-relaxed">
+                        {business.address}
+                        {business.city && `, ${business.city}`}
+                        {business.district && `, ${business.district}`}
+                      </span>
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  {Array.from({ length: 4 }, (_, i) => (
-                    <div
-                      key={i}
-                      className="aspect-square bg-muted rounded-lg border-2 border-muted flex items-center justify-center"
-                    >
-                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                  ))}
-                </div>
-              )}
+              </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 pt-0">
-              <Button 
-                onClick={() => setStep(1)} 
-                className="w-full bg-gradient-to-r from-brand-primary to-brand-primary-dark hover:from-brand-primary-light hover:to-brand-primary transition-all duration-300 text-white font-semibold py-3 shadow-brand hover:shadow-elevated"
-                size="lg"
+            <div className="p-6 space-y-6">
+              {/* Description */}
+              {business.description && (
+                <div className="text-center">
+                  <p className="text-slate-600 leading-relaxed text-sm">
+                    {business.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Portfolio Section */}
+              <div>
+                <h2 className="text-lg font-semibold text-center mb-4 text-slate-800">Çalışmalarımız</h2>
+                {portfolioImages.length > 0 ? (
+                  <div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {portfolioImages
+                        .slice(portfolioPage * imagesPerPage, (portfolioPage + 1) * imagesPerPage)
+                        .map((image) => (
+                          <div
+                            key={image.id}
+                            className="aspect-square bg-slate-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 group"
+                          >
+                            <img
+                              src={image.url}
+                              alt={image.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                          </div>
+                        ))}
+                    </div>
+                    
+                    {/* Modern Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-4 mb-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-10 w-10 rounded-full"
+                          onClick={() => setPortfolioPage(Math.max(0, portfolioPage - 1))}
+                          disabled={portfolioPage === 0}
+                        >
+                          ←
+                        </Button>
+                        <div className="flex gap-2">
+                          {Array.from({ length: totalPages }, (_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setPortfolioPage(i)}
+                              className={cn(
+                                "w-8 h-2 rounded-full transition-all duration-200",
+                                i === portfolioPage 
+                                  ? "bg-brand-primary shadow-md" 
+                                  : "bg-slate-200 hover:bg-slate-300"
+                              )}
+                            />
+                          ))}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-10 w-10 rounded-full"
+                          onClick={() => setPortfolioPage(Math.min(totalPages - 1, portfolioPage + 1))}
+                          disabled={portfolioPage === totalPages - 1}
+                        >
+                          →
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-slate-400">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <ImageIcon className="h-8 w-8" />
+                    </div>
+                    <p className="text-sm">Portföy resimleri yakında eklenecek</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Enhanced Book Button */}
+              <Button
+                className="w-full h-14 bg-gradient-to-r from-brand-primary via-brand-primary-dark to-brand-secondary hover:from-brand-secondary hover:via-brand-primary-dark hover:to-brand-primary text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 relative overflow-hidden group"
+                onClick={() => setStep(1)}
               >
-                <CalendarIcon className="h-5 w-5 mr-2" />
-                Randevu Al
+                <div className="absolute inset-0 bg-white/10 transform skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                <CalendarIcon className="mr-3 h-6 w-6" />
+                Hemen Randevu Al
               </Button>
+
+              {/* Contact Info Cards */}
+              <div className="grid grid-cols-1 gap-3">
+                {business.phone && (
+                  <a 
+                    href={`tel:${business.phone}`}
+                    className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors group"
+                  >
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                      <Phone className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">Telefon</p>
+                      <p className="text-sm text-slate-500">{business.phone}</p>
+                    </div>
+                  </a>
+                )}
+                {business.email && (
+                  <a 
+                    href={`mailto:${business.email}`}
+                    className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors group"
+                  >
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                      <Mail className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">E-posta</p>
+                      <p className="text-sm text-slate-500">{business.email}</p>
+                    </div>
+                  </a>
+                )}
+              </div>
             </div>
-          </Card>
+          </div>
         ) : step === 6 ? (
           // Success Page
           <Card className="bg-white shadow-xl">
