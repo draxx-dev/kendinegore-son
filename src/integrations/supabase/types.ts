@@ -106,6 +106,8 @@ export type Database = {
           name: string
           owner_id: string
           phone: string | null
+          show_email_in_booking: boolean | null
+          show_phone_in_booking: boolean | null
           slug: string
           updated_at: string
         }
@@ -120,6 +122,8 @@ export type Database = {
           name: string
           owner_id: string
           phone?: string | null
+          show_email_in_booking?: boolean | null
+          show_phone_in_booking?: boolean | null
           slug: string
           updated_at?: string
         }
@@ -134,6 +138,8 @@ export type Database = {
           name?: string
           owner_id?: string
           phone?: string | null
+          show_email_in_booking?: boolean | null
+          show_phone_in_booking?: boolean | null
           slug?: string
           updated_at?: string
         }

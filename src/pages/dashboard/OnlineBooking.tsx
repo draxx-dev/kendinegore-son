@@ -16,8 +16,12 @@ import {
   Calendar as CalendarIcon,
   ExternalLink,
   Copy,
-  Eye
+  Eye,
+  Settings,
+  Phone,
+  Mail
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface Business {
   id: string;
@@ -29,6 +33,8 @@ interface Business {
   city: string | null;
   district: string | null;
   slug: string;
+  show_email_in_booking: boolean;
+  show_phone_in_booking: boolean;
 }
 
 interface BusinessImage {
@@ -302,6 +308,98 @@ const OnlineBooking = () => {
                   <Eye className="h-4 w-4 mr-2" />
                   Önizleme Yap
                 </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Randevu Görünürlük Ayarları */}
+      {business && (
+        <Card className="bg-white/80 backdrop-blur-sm border-brand-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Randevu Sayfası Görünürlük Ayarları
+            </CardTitle>
+            <CardDescription>
+              Müşterilerinizin randevu alırken hangi iletişim bilgilerinizi görebileceğini ayarlayın.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <Label className="text-sm font-medium">Telefon Numarası</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {business.phone || "Telefon numarası belirtilmemiş"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={business.show_phone_in_booking}
+                  onCheckedChange={async (checked) => {
+                    try {
+                      const { error } = await supabase
+                        .from('businesses')
+                        .update({ show_phone_in_booking: checked })
+                        .eq('id', business.id);
+
+                      if (error) throw error;
+
+                      setBusiness({ ...business, show_phone_in_booking: checked });
+                      toast({
+                        title: "Başarılı!",
+                        description: `Telefon numarası görünürlüğü ${checked ? 'açıldı' : 'kapatıldı'}.`,
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Hata",
+                        description: "Ayar güncellenirken bir hata oluştu.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-green-600" />
+                  <div>
+                    <Label className="text-sm font-medium">E-posta Adresi</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {business.email || "E-posta adresi belirtilmemiş"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={business.show_email_in_booking}
+                  onCheckedChange={async (checked) => {
+                    try {
+                      const { error } = await supabase
+                        .from('businesses')
+                        .update({ show_email_in_booking: checked })
+                        .eq('id', business.id);
+
+                      if (error) throw error;
+
+                      setBusiness({ ...business, show_email_in_booking: checked });
+                      toast({
+                        title: "Başarılı!",
+                        description: `E-posta adresi görünürlüğü ${checked ? 'açıldı' : 'kapatıldı'}.`,
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Hata",
+                        description: "Ayar güncellenirken bir hata oluştu.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                />
               </div>
             </div>
           </CardContent>

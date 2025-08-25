@@ -39,6 +39,8 @@ interface Business {
   district: string | null;
   slug: string;
   owner_id: string;
+  show_email_in_booking: boolean;
+  show_phone_in_booking: boolean;
 }
 
 interface Service {
@@ -430,7 +432,7 @@ const PublicBooking = () => {
                 </div>
                 <h1 className="text-2xl font-bold mb-2">{business.name}</h1>
                 <div className="space-y-2 text-sm opacity-90">
-                  {business.phone && (
+                  {business.phone && business.show_phone_in_booking && (
                     <div className="flex items-center justify-center gap-2">
                       <Phone className="h-4 w-4" />
                       <span>{business.phone}</span>
@@ -542,7 +544,7 @@ const PublicBooking = () => {
 
               {/* Contact Info Cards */}
               <div className="grid grid-cols-1 gap-3">
-                {business.phone && (
+                {business.phone && business.show_phone_in_booking && (
                   <a 
                     href={`tel:${business.phone}`}
                     className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors group"
@@ -556,7 +558,7 @@ const PublicBooking = () => {
                     </div>
                   </a>
                 )}
-                {business.email && (
+                {business.email && business.show_email_in_booking && (
                   <a 
                     href={`mailto:${business.email}`}
                     className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors group"
