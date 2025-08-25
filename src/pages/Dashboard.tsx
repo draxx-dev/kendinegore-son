@@ -9,6 +9,7 @@ import Customers from "./dashboard/Customers";
 import Payments from "./dashboard/Payments";
 import Settings from "./dashboard/Settings";
 import BusinessDetails from "./dashboard/BusinessDetails";
+import OnlineBooking from "./dashboard/OnlineBooking";
 
 const Dashboard = () => {
   return (
@@ -23,6 +24,7 @@ const Dashboard = () => {
         <Route path="/payments" element={<Payments />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/business-details" element={<BusinessDetails />} />
+        <Route path="/online-booking" element={<OnlineBooking />} />
       </Routes>
     </DashboardLayout>
   );

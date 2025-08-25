@@ -28,7 +28,7 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-const navigationItems = [
+const mainMenuItems = [
   { 
     title: "Genel Bakış", 
     url: "/dashboard", 
@@ -48,22 +48,25 @@ const navigationItems = [
     description: "Müşteri bilgileri ve CRM"
   },
   { 
-    title: "Personel", 
-    url: "/dashboard/staff", 
-    icon: UserCheck,
-    description: "Personel yönetimi"
-  },
-  { 
     title: "Ödemeler", 
     url: "/dashboard/payments", 
     icon: CreditCard,
     description: "Finansal takip ve raporlar"
   },
+];
+
+const businessOperationsItems = [
   { 
     title: "İşletme Detayları", 
     url: "/dashboard/business-details", 
     icon: Building,
-    description: "İşletme bilgileri ve portföy"
+    description: "İşletme bilgileri"
+  },
+  { 
+    title: "Personel", 
+    url: "/dashboard/staff", 
+    icon: UserCheck,
+    description: "Personel yönetimi"
   },
   { 
     title: "Hizmetler", 
@@ -76,6 +79,12 @@ const navigationItems = [
     url: "/dashboard/working-hours", 
     icon: Clock,
     description: "Salon açılış kapanış saatleri"
+  },
+  { 
+    title: "Online Randevu", 
+    url: "/dashboard/online-booking", 
+    icon: BarChart3,
+    description: "Online randevu sayfası ve portföy"
   },
 ];
 
@@ -122,14 +131,14 @@ export function DashboardSidebar() {
           </div>
         </div>
 
-        {/* Navigation */}
-        <SidebarGroup className="flex-1 py-4">
+        {/* Ana Menü Navigation */}
+        <SidebarGroup className="py-2">
           <SidebarGroupLabel className="px-6 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
             {!collapsed && "Ana Menü"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 px-1">
-              {navigationItems.map((item) => {
+              {mainMenuItems.map((item) => {
                 const isActiveRoute = isActive(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -162,8 +171,47 @@ export function DashboardSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* İşletme İşlemleri Navigation */}
+        <SidebarGroup className="py-2">
+          <SidebarGroupLabel className="px-6 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            {!collapsed && "İşletme İşlemleri"}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-2 px-1">
+              {businessOperationsItems.map((item) => {
+                const isActiveRoute = isActive(item.url);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                       <NavLink 
+                         to={item.url} 
+                         className={`flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
+                         title={collapsed ? item.title : undefined}
+                       >
+                        <div className={`${collapsed ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
+                        </div>
+                        {!collapsed && (
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-semibold truncate block">
+                              {item.title}
+                            </span>
+                            <span className="text-xs text-muted-foreground truncate block">
+                              {item.description}
+                            </span>
+                          </div>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {/* Settings */}
-        <div className="px-3 border-t border-border pt-1">
+        <div className="px-3 border-t border-border pt-1 mt-auto">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
