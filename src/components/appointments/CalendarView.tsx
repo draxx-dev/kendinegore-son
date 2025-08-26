@@ -79,7 +79,14 @@ const CalendarView = ({ selectedDate, appointments, onStatusUpdate }: CalendarVi
     return slots;
   };
 
-  const getAppointmentForStaffAtTime = (staffId: string, time: string) => {
+  const getAppointmentForStaffAtTime = (staffId: string | null, time: string) => {
+    if (staffId === null) {
+      // Personelsiz randevular için
+      return appointments.find(apt => 
+        apt.staff === null && 
+        apt.start_time.substring(0, 5) === time
+      );
+    }
     return appointments.find(apt => 
       apt.staff?.id === staffId && 
       apt.start_time.substring(0, 5) === time
@@ -116,6 +123,19 @@ const CalendarView = ({ selectedDate, appointments, onStatusUpdate }: CalendarVi
             <div className="w-20 p-4 bg-brand-primary/5 border-r border-brand-primary/20">
               <div className="text-sm font-medium text-center">Saat</div>
             </div>
+            {/* Personelsiz randevular için sütun */}
+            <div className="flex-1 p-4 text-center border-r border-brand-primary/10">
+              <div className="flex flex-col items-center gap-2">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-gray-200 text-gray-600">
+                    G
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-sm font-medium text-foreground">
+                  Genel
+                </div>
+              </div>
+            </div>
             {staff.map((member) => (
               <div key={member.id} className="flex-1 p-4 text-center border-r border-brand-primary/10 last:border-r-0">
                 <div className="flex flex-col items-center gap-2">
@@ -139,6 +159,47 @@ const CalendarView = ({ selectedDate, appointments, onStatusUpdate }: CalendarVi
               <div key={time} className="flex border-b border-brand-primary/10 last:border-b-0 min-h-[60px]">
                 <div className="w-20 p-3 bg-brand-primary/5 border-r border-brand-primary/20 flex items-center justify-center">
                   <div className="text-sm font-medium">{time}</div>
+                </div>
+                {/* Personelsiz randevular için sütun */}
+                <div className="flex-1 p-2 border-r border-brand-primary/10">
+                  {(() => {
+                    const appointment = getAppointmentForStaffAtTime(null, time);
+                    return appointment && (
+                      <div className={`rounded-lg border p-2 text-xs ${getStatusColor(appointment.status)}`}>
+                        <div className="font-medium mb-1">
+                          {appointment.start_time.substring(0, 5)} - {appointment.end_time.substring(0, 5)}
+                        </div>
+                        <div className="font-semibold mb-1">
+                          {appointment.customers.first_name} {appointment.customers.last_name}
+                        </div>
+                        <div className="mb-1">
+                          {appointment.services.name}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {appointment.status === 'scheduled' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => onStatusUpdate(appointment.appointment_group_id, 'confirmed')}
+                            >
+                              Onayla
+                            </Button>
+                          )}
+                          {['scheduled', 'confirmed'].includes(appointment.status) && (
+                            <Button
+                              size="sm"
+                              variant="brand"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => onStatusUpdate(appointment.appointment_group_id, 'completed')}
+                            >
+                              Tamamla
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
                 {staff.map((member) => {
                   const appointment = getAppointmentForStaffAtTime(member.id, time);
