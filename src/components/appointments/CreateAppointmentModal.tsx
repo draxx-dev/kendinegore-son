@@ -163,6 +163,15 @@ export const CreateAppointmentModal = ({
       // Generate a single group ID for all services in this appointment
       const appointmentGroupId = crypto.randomUUID();
 
+      // Determine staff assignment
+      let finalStaffId = formData.staff_id;
+      
+      if (!finalStaffId && staff.length > 0) {
+        // If no staff selected, assign randomly from available staff
+        const randomIndex = Math.floor(Math.random() * staff.length);
+        finalStaffId = staff[randomIndex].id;
+      }
+
       // Create appointments for each selected service with the same group_id
       const appointmentPromises = selectedServices.map(async (serviceId) => {
         const { error } = await supabase
@@ -171,7 +180,7 @@ export const CreateAppointmentModal = ({
             business_id: businessId,
             customer_id: formData.customer_id,
             service_id: serviceId,
-            staff_id: formData.staff_id || null,
+            staff_id: finalStaffId || null,
             appointment_date: formData.appointment_date,
             start_time: formData.start_time,
             end_time: endTime,
