@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon, Plus, Clock, User, Scissors, Filter, LayoutGr
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateAppointmentModal } from "@/components/appointments/CreateAppointmentModal";
+import { EditAppointmentModal } from "@/components/appointments/EditAppointmentModal";
 import { PaymentModal } from "@/components/appointments/PaymentModal";
 import CalendarView from "@/components/appointments/CalendarView";
 
@@ -75,6 +76,7 @@ const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<GroupedAppointment | null>(null);
   const [isCalendarView, setIsCalendarView] = useState(false);
@@ -206,6 +208,22 @@ const Appointments = () => {
 
   const getStatusActions = (groupedAppointment: GroupedAppointment) => {
     const actions = [];
+    
+    // Düzenle butonu her durumda göster
+    actions.push(
+      <Button 
+        key="edit"
+        size="sm" 
+        variant="outline"
+        onClick={() => {
+          setSelectedAppointment(groupedAppointment);
+          setShowEditModal(true);
+        }}
+        className="text-blue-600 hover:text-blue-700"
+      >
+        Düzenle
+      </Button>
+    );
     
     if (groupedAppointment.status === 'scheduled') {
       actions.push(
@@ -447,9 +465,13 @@ const Appointments = () => {
 
                       <div>
                         <div className="font-medium">₺{groupedAppointment.total_price}</div>
-                        {groupedAppointment.staff && (
+                        {groupedAppointment.staff ? (
+                          <div className="text-sm text-brand-primary font-medium">
+                            👤 {groupedAppointment.staff.name}
+                          </div>
+                        ) : (
                           <div className="text-sm text-muted-foreground">
-                            {groupedAppointment.staff.name}
+                            👤 Personel atanacak
                           </div>
                         )}
                         {/* Ödeme bilgisi göster */}
@@ -553,6 +575,19 @@ const Appointments = () => {
           appointmentId={selectedAppointment.appointment_ids[0]} // Use first appointment ID for payment
           totalAmount={selectedAppointment.total_price}
           customerName={`${selectedAppointment.customers.first_name} ${selectedAppointment.customers.last_name}`}
+          onSuccess={() => {
+            fetchAppointments();
+            setSelectedAppointment(null);
+          }}
+        />
+      )}
+
+      {/* Edit Appointment Modal */}
+      {selectedAppointment && (
+        <EditAppointmentModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          appointmentGroup={selectedAppointment}
           onSuccess={() => {
             fetchAppointments();
             setSelectedAppointment(null);
