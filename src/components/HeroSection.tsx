@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar, Users, TrendingUp, Star, CreditCard, Zap, Lock, PartyPopper } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export const HeroSection = () => {
   const [currentText, setCurrentText] = useState(0);
@@ -108,9 +109,11 @@ export const HeroSection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Button size="lg" className="text-lg px-12 py-6 bg-white/70 backdrop-blur-xl border-white/30 hover:bg-white/80 text-gray-900 shadow-lg transform hover:scale-105 transition-all duration-300 font-inter">
-              <PartyPopper className="w-5 h-5 mr-2" />
-              14 Gün Ücretsiz Deneyin
+            <Button size="lg" className="text-lg px-12 py-6 bg-white/70 backdrop-blur-xl border-white/30 hover:bg-white/80 text-gray-900 shadow-lg transform hover:scale-105 transition-all duration-300 font-inter" asChild>
+              <Link to="/auth">
+                <PartyPopper className="w-5 h-5 mr-2" />
+                14 Gün Ücretsiz Deneyin
+              </Link>
             </Button>
           </div>
 
