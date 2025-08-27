@@ -25,25 +25,28 @@ export const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <h1 className="text-2xl font-bold text-gray-800 font-playfair">
+            <h1 className="text-xl font-bold text-foreground">
               KendineGöre
             </h1>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Button variant="ghost" className="text-gray-800 hover:text-gray-900 hover:bg-gray-100/50" asChild>
+            <Button variant="ghost" className="text-foreground hover:text-foreground hover:bg-secondary/50" asChild>
               <Link to="/auth">Giriş Yap</Link>
             </Button>
-            <Button className="bg-gray-800 text-white hover:bg-gray-900 shadow-lg" asChild>
-              <Link to="/register-business">İşletmeni Kaydet</Link>
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg" asChild>
+              <Link to="/auth">İşletmeni Kaydet</Link>
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <Button variant="ghost" size="icon" className="text-gray-800 hover:bg-gray-100/50">
-              <Menu className="h-5 w-5" />
+          {/* Mobile Navigation */}
+          <div className="md:hidden flex items-center space-x-2">
+            <Button variant="ghost" size="sm" className="text-foreground hover:bg-secondary/50" asChild>
+              <Link to="/auth">Giriş</Link>
+            </Button>
+            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
+              <Link to="/auth">Kayıt</Link>
             </Button>
           </div>
         </div>
