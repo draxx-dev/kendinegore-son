@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const mainMenuItems = [
   { 
@@ -89,10 +90,11 @@ const businessOperationsItems = [
 ];
 
 export function DashboardSidebar() {
-  const { toggleSidebar, state } = useSidebar();
+  const { toggleSidebar, state, isMobile } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+  const isMobileDevice = useIsMobile();
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -107,12 +109,21 @@ export function DashboardSidebar() {
       : "hover:bg-secondary/30";
 
   return (
-    <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
+    <Sidebar 
+      className={
+        isMobileDevice 
+          ? "w-72" 
+          : collapsed 
+            ? "w-16" 
+            : "w-64"
+      } 
+      collapsible={isMobileDevice ? "offcanvas" : "icon"}
+    >
       <SidebarContent className="bg-white border-r border-border shadow-sm">
         {/* Header */}
-        <div className={`${collapsed ? 'py-2 px-1 border-b border-border translate-y-[1px]' : 'py-[32px] px-3 border-b border-border'} h-[4rem] flex items-center mb-px`}>
-          <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} w-full`}>
-            {!collapsed && (
+        <div className={`${collapsed && !isMobileDevice ? 'py-2 px-1 border-b border-border translate-y-[1px]' : 'py-[32px] px-3 border-b border-border'} h-[4rem] flex items-center mb-px`}>
+          <div className={`flex items-center ${collapsed && !isMobileDevice ? 'justify-center' : 'justify-between'} w-full`}>
+            {(!collapsed || isMobileDevice) && (
               <div>
                 <h2 className="text-xl font-bold text-foreground">
                   KendineGöre
@@ -120,21 +131,23 @@ export function DashboardSidebar() {
                 <p className="text-sm text-muted-foreground mt-1">Yönetim Paneli</p>
               </div>
             )}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => toggleSidebar()}
-              className={`h-8 w-8 hover:bg-secondary/50 ${collapsed ? '' : 'flex-shrink-0'}`}
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
+            {!isMobileDevice && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => toggleSidebar()}
+                className={`h-8 w-8 hover:bg-secondary/50 ${collapsed ? '' : 'flex-shrink-0'}`}
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 
         {/* Ana Menü Navigation */}
         <SidebarGroup className="py-2">
           <SidebarGroupLabel className="px-6 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            {!collapsed && "Ana Menü"}
+            {(!collapsed || isMobileDevice) && "Ana Menü"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 px-1">
@@ -146,13 +159,13 @@ export function DashboardSidebar() {
                        <NavLink 
                          to={item.url} 
                          end={item.url === "/dashboard"}
-                         className={`flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
-                         title={collapsed ? item.title : undefined}
+                         className={`flex items-center ${collapsed && !isMobileDevice ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
+                         title={(collapsed && !isMobileDevice) ? item.title : undefined}
                        >
-                        <div className={`${collapsed ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
+                        <div className={`${collapsed && !isMobileDevice ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className={`${collapsed && !isMobileDevice ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                         </div>
-                        {!collapsed && (
+                        {(!collapsed || isMobileDevice) && (
                           <div className="flex-1 min-w-0">
                             <span className="text-sm font-semibold truncate block">
                               {item.title}
@@ -174,7 +187,7 @@ export function DashboardSidebar() {
         {/* İşletme İşlemleri Navigation */}
         <SidebarGroup className="py-2">
           <SidebarGroupLabel className="px-6 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            {!collapsed && "İşletme İşlemleri"}
+            {(!collapsed || isMobileDevice) && "İşletme İşlemleri"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 px-1">
@@ -185,13 +198,13 @@ export function DashboardSidebar() {
                     <SidebarMenuButton asChild>
                        <NavLink 
                          to={item.url} 
-                         className={`flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
-                         title={collapsed ? item.title : undefined}
+                         className={`flex items-center ${collapsed && !isMobileDevice ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
+                         title={(collapsed && !isMobileDevice) ? item.title : undefined}
                        >
-                        <div className={`${collapsed ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                          <item.icon className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
+                        <div className={`${collapsed && !isMobileDevice ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className={`${collapsed && !isMobileDevice ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                         </div>
-                        {!collapsed && (
+                        {(!collapsed || isMobileDevice) && (
                           <div className="flex-1 min-w-0">
                             <span className="text-sm font-semibold truncate block">
                               {item.title}
@@ -217,15 +230,15 @@ export function DashboardSidebar() {
               <SidebarMenuButton asChild>
                  <NavLink 
                    to="/dashboard/settings" 
-                   className={({isActive}) => `flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
-                   title={collapsed ? "Ayarlar" : undefined}
+                   className={({isActive}) => `flex items-center ${collapsed && !isMobileDevice ? 'justify-center px-0' : 'gap-3 px-3'} py-2 rounded-xl transition-all duration-300 group ${getNavClassName(isActive)}`}
+                   title={(collapsed && !isMobileDevice) ? "Ayarlar" : undefined}
                  >
                   {({isActive}) => (
                     <>
-                      <div className={`${collapsed ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActive ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
-                        <Settings className={`${collapsed ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                      <div className={`${collapsed && !isMobileDevice ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActive ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                        <Settings className={`${collapsed && !isMobileDevice ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActive ? 'text-primary' : ''}`} />
                       </div>
-                      {!collapsed && <span className="text-sm font-semibold">Ayarlar</span>}
+                      {(!collapsed || isMobileDevice) && <span className="text-sm font-semibold">Ayarlar</span>}
                     </>
                   )}
                 </NavLink>
