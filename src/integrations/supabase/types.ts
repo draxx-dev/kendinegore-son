@@ -368,9 +368,12 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          password_hash: string | null
+          permissions: Json | null
           phone: string | null
           profile_image_url: string | null
           specialties: string[] | null
+          temp_password: string | null
           updated_at: string
         }
         Insert: {
@@ -380,9 +383,12 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          password_hash?: string | null
+          permissions?: Json | null
           phone?: string | null
           profile_image_url?: string | null
           specialties?: string[] | null
+          temp_password?: string | null
           updated_at?: string
         }
         Update: {
@@ -392,9 +398,12 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          password_hash?: string | null
+          permissions?: Json | null
           phone?: string | null
           profile_image_url?: string | null
           specialties?: string[] | null
+          temp_password?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -403,6 +412,69 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_permissions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      staff_role_assignments: {
+        Row: {
+          granted_at: string
+          granted_by: string
+          id: string
+          permission_id: string
+          staff_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by: string
+          id?: string
+          permission_id: string
+          staff_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          permission_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_role_assignments_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "staff_permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_role_assignments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
             referencedColumns: ["id"]
           },
         ]
@@ -463,6 +535,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      authenticate_staff: {
+        Args: { business_email_param: string; staff_password_param: string }
+        Returns: Json
+      }
       create_default_working_hours: {
         Args: { business_id_param: string }
         Returns: undefined
@@ -474,6 +550,10 @@ export type Database = {
           district_name?: string
         }
         Returns: string
+      }
+      staff_has_permission: {
+        Args: { permission_name_param: string; staff_id_param: string }
+        Returns: boolean
       }
     }
     Enums: {
