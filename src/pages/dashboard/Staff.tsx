@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkingHoursModal } from "@/components/staff/WorkingHoursModal";
+import { StaffPermissionsModal } from "@/components/staff/StaffPermissionsModal";
 import { 
   Plus, 
   Edit, 
@@ -18,7 +19,9 @@ import {
   UserCheck,
   Save,
   X,
-  Clock
+  Clock,
+  Shield,
+  Key
 } from "lucide-react";
 
 interface Staff {
@@ -29,6 +32,8 @@ interface Staff {
   profile_image_url: string | null;
   specialties: string[] | null;
   is_active: boolean;
+  temp_password?: string | null;
+  permissions?: any;
 }
 
 interface Service {
@@ -43,13 +48,15 @@ const Staff = () => {
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [showNewStaffForm, setShowNewStaffForm] = useState(false);
   const [showWorkingHoursModal, setShowWorkingHoursModal] = useState(false);
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    profileImage: null as File | null
+    profileImage: null as File | null,
+    tempPassword: ""
   });
 
   const { toast } = useToast();
@@ -170,7 +177,7 @@ const Staff = () => {
         description: "Yeni personel eklendi.",
       });
 
-      setFormData({ name: "", email: "", phone: "", profileImage: null });
+      setFormData({ name: "", email: "", phone: "", profileImage: null, tempPassword: "" });
       setSelectedServices([]);
       setShowNewStaffForm(false);
       fetchStaff();
@@ -271,7 +278,8 @@ const Staff = () => {
       name: staffMember.name,
       email: staffMember.email || "",
       phone: staffMember.phone || "",
-      profileImage: null
+      profileImage: null,
+      tempPassword: ""
     });
     // Set selected services based on staff's specialties
     const staffServices = services.filter(service => 
@@ -282,7 +290,7 @@ const Staff = () => {
 
   const cancelEdit = () => {
     setEditingStaff(null);
-    setFormData({ name: "", email: "", phone: "", profileImage: null });
+    setFormData({ name: "", email: "", phone: "", profileImage: null, tempPassword: "" });
     setSelectedServices([]);
   };
 
@@ -297,6 +305,42 @@ const Staff = () => {
   const handleWorkingHoursClick = (staffMember: Staff) => {
     setSelectedStaff(staffMember);
     setShowWorkingHoursModal(true);
+  };
+
+  const handlePermissionsClick = (staffMember: Staff) => {
+    setSelectedStaff(staffMember);
+    setShowPermissionsModal(true);
+  };
+
+  const generateTempPassword = () => {
+    return Math.random().toString(36).slice(-8);
+  };
+
+  const handleSetPassword = async (staffId: string) => {
+    const tempPassword = generateTempPassword();
+    
+    try {
+      const { error } = await supabase
+        .from('staff')
+        .update({ temp_password: tempPassword })
+        .eq('id', staffId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Şifre Oluşturuldu!",
+        description: `Geçici şifre: ${tempPassword}`,
+        duration: 10000,
+      });
+
+      fetchStaff();
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Şifre oluşturulurken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -416,17 +460,17 @@ const Staff = () => {
                 <Save className="h-4 w-4 mr-2" />
                 Kaydet
               </Button>
-              <Button 
-                onClick={() => {
-                  setShowNewStaffForm(false);
-                  setFormData({ name: "", email: "", phone: "", profileImage: null });
-                  setSelectedServices([]);
-                }}
-                variant="outline"
-              >
-                <X className="h-4 w-4 mr-2" />
-                İptal
-              </Button>
+                <Button 
+                  onClick={() => {
+                    setShowNewStaffForm(false);
+                    setFormData({ name: "", email: "", phone: "", profileImage: null, tempPassword: "" });
+                    setSelectedServices([]);
+                  }}
+                  variant="outline"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  İptal
+                </Button>
             </div>
           </CardContent>
         </Card>
@@ -538,16 +582,17 @@ const Staff = () => {
                       </div>
                     )}
                     
-                    <div className="flex gap-2 pt-2">
+                    <div className="grid grid-cols-2 gap-2 pt-2">
                       <Button 
                         onClick={() => startEdit(staffMember)}
                         size="sm" 
                         variant="outline"
-                        className="flex-1"
+                        className="col-span-2"
                       >
                         <Edit className="h-4 w-4 mr-1" />
                         Düzenle
                       </Button>
+                      
                       <Button 
                         onClick={() => handleWorkingHoursClick(staffMember)}
                         size="sm" 
@@ -555,15 +600,40 @@ const Staff = () => {
                         className="text-muted-foreground hover:text-brand-primary"
                         title="Çalışma Saatleri"
                       >
-                        <Clock className="h-4 w-4" />
+                        <Clock className="h-4 w-4 mr-1" />
+                        Saatler
                       </Button>
+                      
+                      <Button 
+                        onClick={() => handlePermissionsClick(staffMember)}
+                        size="sm" 
+                        variant="outline"
+                        className="text-muted-foreground hover:text-brand-primary"
+                        title="Yetki Yönetimi"
+                      >
+                        <Shield className="h-4 w-4 mr-1" />
+                        Yetkiler
+                      </Button>
+                      
+                      <Button 
+                        onClick={() => handleSetPassword(staffMember.id)}
+                        size="sm" 
+                        variant="outline"
+                        className="text-green-600 hover:text-green-700"
+                        title="Şifre Belirle"
+                      >
+                        <Key className="h-4 w-4 mr-1" />
+                        Şifre
+                      </Button>
+                      
                       <Button 
                         onClick={() => handleDeleteStaff(staffMember.id)}
                         size="sm" 
                         variant="outline"
                         className="text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Sil
                       </Button>
                     </div>
                   </div>
@@ -600,6 +670,16 @@ const Staff = () => {
         <WorkingHoursModal
           open={showWorkingHoursModal}
           onOpenChange={setShowWorkingHoursModal}
+          staffId={selectedStaff.id}
+          staffName={selectedStaff.name}
+        />
+      )}
+
+      {/* Staff Permissions Modal */}
+      {selectedStaff && (
+        <StaffPermissionsModal
+          isOpen={showPermissionsModal}
+          onClose={() => setShowPermissionsModal(false)}
           staffId={selectedStaff.id}
           staffName={selectedStaff.name}
         />

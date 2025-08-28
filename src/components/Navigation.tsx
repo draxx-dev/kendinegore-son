@@ -32,6 +32,9 @@ export const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
+            <Button variant="outline" className="text-muted-foreground hover:text-foreground" asChild>
+              <Link to="/staff-login">Personel Girişi</Link>
+            </Button>
             <Button variant="ghost" className="text-foreground hover:text-foreground hover:bg-secondary/50" asChild>
               <Link to="/auth">Giriş Yap</Link>
             </Button>
@@ -42,6 +45,9 @@ export const Navigation = () => {
 
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center space-x-2">
+            <Button variant="outline" size="sm" className="text-muted-foreground hover:text-foreground" asChild>
+              <Link to="/staff-login">Personel</Link>
+            </Button>
             <Button variant="ghost" size="sm" className="text-foreground hover:bg-secondary/50" asChild>
               <Link to="/auth">Giriş</Link>
             </Button>
