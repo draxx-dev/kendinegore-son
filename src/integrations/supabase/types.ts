@@ -368,12 +368,12 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          password: string | null
           password_hash: string | null
           permissions: Json | null
           phone: string | null
           profile_image_url: string | null
           specialties: string[] | null
-          temp_password: string | null
           updated_at: string
         }
         Insert: {
@@ -383,12 +383,12 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          password?: string | null
           password_hash?: string | null
           permissions?: Json | null
           phone?: string | null
           profile_image_url?: string | null
           specialties?: string[] | null
-          temp_password?: string | null
           updated_at?: string
         }
         Update: {
@@ -398,12 +398,12 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          password?: string | null
           password_hash?: string | null
           permissions?: Json | null
           phone?: string | null
           profile_image_url?: string | null
           specialties?: string[] | null
-          temp_password?: string | null
           updated_at?: string
         }
         Relationships: [

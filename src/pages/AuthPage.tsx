@@ -6,18 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LogIn, UserPlus, Shield, Building2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loginType, setLoginType] = useState<'business' | 'staff'>('business');
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     firstName: "",
     lastName: "",
-    phone: ""
+    phone: "",
+    businessEmail: ""
   });
 
   const { toast } = useToast();
@@ -46,31 +48,64 @@ const AuthPage = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+      if (loginType === 'staff') {
+        // Staff login
+        const { data, error } = await supabase.rpc('authenticate_staff', {
+          business_email_param: formData.businessEmail,
+          staff_password_param: formData.password
+        });
 
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
+        if (error) throw error;
+
+        const result = data as any;
+        
+        if (result.success) {
+          localStorage.setItem('staff_session', JSON.stringify({
+            staff: result.staff,
+            loginTime: new Date().toISOString()
+          }));
+
           toast({
-            title: "Giriş Hatası",
-            description: "Email veya şifre hatalı. Lütfen kontrol edip tekrar deneyin.",
-            variant: "destructive",
+            title: "Başarılı!",
+            description: `Hoş geldiniz, ${result.staff.name}!`,
           });
+
+          navigate('/staff-dashboard');
         } else {
           toast({
             title: "Giriş Hatası",
-            description: error.message,
+            description: result.error || "Geçersiz bilgiler.",
             variant: "destructive",
           });
         }
       } else {
-        toast({
-          title: "Başarılı!",
-          description: "Giriş yapılıyor...",
+        // Business login
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
         });
-        navigate("/dashboard");
+
+        if (error) {
+          if (error.message.includes("Invalid login credentials")) {
+            toast({
+              title: "Giriş Hatası",
+              description: "Email veya şifre hatalı. Lütfen kontrol edip tekrar deneyin.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Giriş Hatası",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Başarılı!",
+            description: "Giriş yapılıyor...",
+          });
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       toast({
@@ -155,13 +190,37 @@ const AuthPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Login Type Toggle */}
+            <div className="mb-6">
+              <div className="grid w-full grid-cols-2 gap-1 rounded-md bg-muted p-1">
+                <Button
+                  type="button"
+                  variant={loginType === 'business' ? 'default' : 'ghost'}
+                  className="rounded-sm"
+                  onClick={() => setLoginType('business')}
+                >
+                  <Building2 className="h-4 w-4 mr-2" />
+                  İşletme
+                </Button>
+                <Button
+                  type="button"
+                  variant={loginType === 'staff' ? 'default' : 'ghost'}
+                  className="rounded-sm"
+                  onClick={() => setLoginType('staff')}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Personel
+                </Button>
+              </div>
+            </div>
+
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login" className="flex items-center gap-2">
                   <LogIn className="h-4 w-4" />
                   Giriş Yap
                 </TabsTrigger>
-                <TabsTrigger value="signup" className="flex items-center gap-2">
+                <TabsTrigger value="signup" className="flex items-center gap-2" disabled={loginType === 'staff'}>
                   <UserPlus className="h-4 w-4" />
                   Kayıt Ol
                 </TabsTrigger>
@@ -170,27 +229,45 @@ const AuthPage = () => {
               {/* Giriş Formu */}
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      name="email"
-                      type="email"
-                      placeholder="ornek@email.com"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
+                  {loginType === 'staff' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="business-email">İşletme Email Adresi</Label>
+                      <Input
+                        id="business-email"
+                        name="businessEmail"
+                        type="email"
+                        placeholder="isletme@email.com"
+                        value={formData.businessEmail}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  )}
+                  {loginType === 'business' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email</Label>
+                      <Input
+                        id="login-email"
+                        name="email"
+                        type="email"
+                        placeholder="ornek@email.com"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  )}
                   
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Şifre</Label>
+                    <Label htmlFor="login-password">
+                      {loginType === 'staff' ? 'Size Verilen Şifre' : 'Şifre'}
+                    </Label>
                     <div className="relative">
                       <Input
                         id="login-password"
                         name="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
+                        placeholder={loginType === 'staff' ? "İşletmenin size verdiği şifre" : "••••••••"}
                         value={formData.password}
                         onChange={handleInputChange}
                         required
@@ -224,7 +301,18 @@ const AuthPage = () => {
 
               {/* Kayıt Formu */}
               <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
+                {loginType === 'staff' && (
+                  <div className="text-center py-8">
+                    <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Personel Kayıt</h3>
+                    <p className="text-muted-foreground">
+                      Personel hesapları yalnızca işletme yöneticileri tarafından oluşturulabilir.
+                      Giriş bilgileriniz için işletme yöneticinizle iletişime geçin.
+                    </p>
+                  </div>
+                )}
+                {loginType === 'business' && (
+                  <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">Ad</Label>
@@ -313,6 +401,7 @@ const AuthPage = () => {
                     {isLoading ? "Hesap oluşturuluyor..." : "Hesap Oluştur"}
                   </Button>
                 </form>
+                )}
               </TabsContent>
             </Tabs>
 

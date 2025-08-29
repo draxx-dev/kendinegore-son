@@ -38,37 +38,35 @@ export const StaffLogin = () => {
 
     setLoading(true);
     try {
-      // Call the authenticate_staff function
-      const { data, error } = await supabase.rpc('authenticate_staff', {
-        business_email_param: formData.businessEmail,
-        staff_password_param: formData.password
-      });
-
-      if (error) throw error;
-
-      const result = data as any;
-      
-      if (result.success) {
-        // Store staff session in localStorage
-        localStorage.setItem('staff_session', JSON.stringify({
-          staff: result.staff,
-          loginTime: new Date().toISOString()
-        }));
-
-        toast({
-          title: "Başarılı!",
-          description: `Hoş geldiniz, ${result.staff.name}!`,
+        // Staff login
+        const { data, error } = await supabase.rpc('authenticate_staff', {
+          business_email_param: formData.businessEmail,
+          staff_password_param: formData.password
         });
 
-        // Redirect to staff dashboard
-        navigate('/staff-dashboard');
-      } else {
-        toast({
-          title: "Giriş Hatası",
-          description: result.error || "Geçersiz bilgiler.",
-          variant: "destructive",
-        });
-      }
+        if (error) throw error;
+
+        const result = data as any;
+        
+        if (result.success) {
+          localStorage.setItem('staff_session', JSON.stringify({
+            staff: result.staff,
+            loginTime: new Date().toISOString()
+          }));
+
+          toast({
+            title: "Başarılı!",
+            description: `Hoş geldiniz, ${result.staff.name}!`,
+          });
+
+          navigate('/staff-dashboard');
+        } else {
+          toast({
+            title: "Giriş Hatası",
+            description: result.error || "Geçersiz bilgiler.",
+            variant: "destructive",
+          });
+        }
     } catch (error) {
       toast({
         title: "Hata",

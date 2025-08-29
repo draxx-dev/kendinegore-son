@@ -32,7 +32,7 @@ interface Staff {
   profile_image_url: string | null;
   specialties: string[] | null;
   is_active: boolean;
-  temp_password?: string | null;
+  password?: string | null;
   permissions?: any;
 }
 
@@ -56,7 +56,7 @@ const Staff = () => {
     email: "",
     phone: "",
     profileImage: null as File | null,
-    tempPassword: ""
+    password: ""
   });
 
   const { toast } = useToast();
@@ -177,7 +177,7 @@ const Staff = () => {
         description: "Yeni personel eklendi.",
       });
 
-      setFormData({ name: "", email: "", phone: "", profileImage: null, tempPassword: "" });
+      setFormData({ name: "", email: "", phone: "", profileImage: null, password: "" });
       setSelectedServices([]);
       setShowNewStaffForm(false);
       fetchStaff();
@@ -279,7 +279,7 @@ const Staff = () => {
       email: staffMember.email || "",
       phone: staffMember.phone || "",
       profileImage: null,
-      tempPassword: ""
+      password: ""
     });
     // Set selected services based on staff's specialties
     const staffServices = services.filter(service => 
@@ -290,7 +290,7 @@ const Staff = () => {
 
   const cancelEdit = () => {
     setEditingStaff(null);
-    setFormData({ name: "", email: "", phone: "", profileImage: null, tempPassword: "" });
+    setFormData({ name: "", email: "", phone: "", profileImage: null, password: "" });
     setSelectedServices([]);
   };
 
@@ -312,24 +312,24 @@ const Staff = () => {
     setShowPermissionsModal(true);
   };
 
-  const generateTempPassword = () => {
+  const generatePassword = () => {
     return Math.random().toString(36).slice(-8);
   };
 
   const handleSetPassword = async (staffId: string) => {
-    const tempPassword = generateTempPassword();
+    const password = generatePassword();
     
     try {
       const { error } = await supabase
         .from('staff')
-        .update({ temp_password: tempPassword })
+        .update({ password: password })
         .eq('id', staffId);
 
       if (error) throw error;
 
       toast({
         title: "Şifre Oluşturuldu!",
-        description: `Geçici şifre: ${tempPassword}`,
+        description: `Kalıcı şifre: ${password} - Bu şifreyi personele verin.`,
         duration: 10000,
       });
 
@@ -460,14 +460,14 @@ const Staff = () => {
                 <Save className="h-4 w-4 mr-2" />
                 Kaydet
               </Button>
-                <Button 
-                  onClick={() => {
-                    setShowNewStaffForm(false);
-                    setFormData({ name: "", email: "", phone: "", profileImage: null, tempPassword: "" });
-                    setSelectedServices([]);
-                  }}
-                  variant="outline"
-                >
+                  <Button 
+                    onClick={() => {
+                      setShowNewStaffForm(false);
+                      setFormData({ name: "", email: "", phone: "", profileImage: null, password: "" });
+                      setSelectedServices([]);
+                    }}
+                    variant="outline"
+                  >
                   <X className="h-4 w-4 mr-2" />
                   İptal
                 </Button>
@@ -582,6 +582,13 @@ const Staff = () => {
                       </div>
                     )}
                     
+                    {staffMember.password && (
+                      <div className="flex items-center gap-2 text-green-700 bg-green-50 p-2 rounded-md">
+                        <Key className="h-4 w-4" />
+                        <span className="text-sm font-medium">Şifre: {staffMember.password}</span>
+                      </div>
+                    )}
+                    
                     <div className="grid grid-cols-2 gap-2 pt-2">
                       <Button 
                         onClick={() => startEdit(staffMember)}
@@ -620,10 +627,10 @@ const Staff = () => {
                         size="sm" 
                         variant="outline"
                         className="text-green-600 hover:text-green-700"
-                        title="Şifre Belirle"
+                        title={staffMember.password ? "Yeni Şifre Oluştur" : "Şifre Belirle"}
                       >
                         <Key className="h-4 w-4 mr-1" />
-                        Şifre
+                        {staffMember.password ? "Yeni Şifre" : "Şifre"}
                       </Button>
                       
                       <Button 
