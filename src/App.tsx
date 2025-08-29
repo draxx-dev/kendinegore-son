@@ -23,7 +23,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/staff-login" element={<StaffLogin />} />
-          <Route path="/staff-dashboard" element={<StaffDashboard />} />
+          <Route path="/staff-dashboard/*" element={<StaffDashboard />} />
           <Route path="/dashboard/*" element={<Dashboard />} />
           <Route path="/randevu/:slug" element={<PublicBooking />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
