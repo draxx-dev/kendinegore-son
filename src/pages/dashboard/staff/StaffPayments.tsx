@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { CreditCard, Calendar, User, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 interface Payment {
   id: string;
@@ -135,7 +136,8 @@ const StaffPayments = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <PermissionGuard permission="view_payments">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Ödemeler
@@ -244,7 +246,8 @@ const StaffPayments = () => {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </PermissionGuard>
   );
 };
 

@@ -10,6 +10,12 @@ import StaffAppointments from "./dashboard/staff/StaffAppointments";
 import StaffCustomers from "./dashboard/staff/StaffCustomers";
 import StaffPayments from "./dashboard/staff/StaffPayments";
 import StaffSettings from "./dashboard/staff/StaffSettings";
+import StaffBusinessDetails from "./dashboard/staff/StaffBusinessDetails";
+import StaffStaff from "./dashboard/staff/StaffStaff";
+import StaffServices from "./dashboard/staff/StaffServices";
+import StaffWorkingHours from "./dashboard/staff/StaffWorkingHours";
+import StaffOnlineBooking from "./dashboard/staff/StaffOnlineBooking";
+import StaffReports from "./dashboard/staff/StaffReports";
 
 interface StaffSession {
   staff: {
@@ -26,8 +32,8 @@ const StaffDashboardOverview = () => {
 
   const quickActions = [
     {
-      title: "Randevularım",
-      description: "Bugünkü randevularınızı görün",
+      title: "Randevular",
+      description: "Bugünkü randevuları görün",
       icon: Calendar,
       href: "/staff-dashboard/appointments",
       color: "bg-blue-500/10 text-blue-600"
@@ -144,6 +150,12 @@ export const StaffDashboard = () => {
         <Route path="/appointments/*" element={<StaffAppointments />} />
         <Route path="/customers/*" element={<StaffCustomers />} />
         <Route path="/payments" element={<StaffPayments />} />
+        <Route path="/business-details" element={<StaffBusinessDetails />} />
+        <Route path="/staff" element={<StaffStaff />} />
+        <Route path="/services" element={<StaffServices />} />
+        <Route path="/working-hours" element={<StaffWorkingHours />} />
+        <Route path="/online-booking" element={<StaffOnlineBooking />} />
+        <Route path="/reports" element={<StaffReports />} />
         <Route path="/settings" element={<StaffSettings />} />
       </Routes>
     </StaffDashboardLayout>

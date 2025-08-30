@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Users, Search, Phone, Mail, Calendar } from "lucide-react";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 interface Customer {
   id: string;
@@ -72,7 +73,8 @@ const StaffCustomers = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <PermissionGuard permission="view_customers">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Müşteriler
@@ -179,7 +181,8 @@ const StaffCustomers = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </PermissionGuard>
   );
 };
 
