@@ -36,29 +36,15 @@ const StaffCustomers = () => {
 
       const session = JSON.parse(staffSession);
       
-      // Get customers that have appointments with this staff member
+      // Get all customers from the same business
       const { data, error } = await supabase
         .from('customers')
-        .select(`
-          *,
-          appointments!inner (
-            staff_id
-          )
-        `)
-        .eq('appointments.staff_id', session.staff.id);
+        .select('*')
+        .eq('business_id', session.staff.business_id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Remove duplicates and get unique customers
-      const uniqueCustomers = data?.reduce((acc: Customer[], current) => {
-        const existing = acc.find(item => item.id === current.id);
-        if (!existing) {
-          acc.push(current);
-        }
-        return acc;
-      }, []) || [];
-
-      setCustomers(uniqueCustomers);
+      setCustomers(data || []);
     } catch (error) {
       console.error('Error fetching customers:', error);
       toast({
@@ -89,10 +75,10 @@ const StaffCustomers = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">
-          Müşterilerim
+          Müşteriler
         </h1>
         <p className="text-muted-foreground">
-          Randevu aldığınız müşterileri görüntüleyin.
+          İşletme müşterilerini görüntüleyin ve yönetin.
         </p>
       </div>
 
@@ -114,7 +100,7 @@ const StaffCustomers = () => {
           <CardContent className="py-8 text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {searchTerm ? "Arama kriterlerine uygun müşteri bulunamadı." : "Henüz randevu aldığınız müşteri bulunmuyor."}
+              {searchTerm ? "Arama kriterlerine uygun müşteri bulunamadı." : "Henüz müşteri kaydı bulunmuyor."}
             </p>
           </CardContent>
         </Card>

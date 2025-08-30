@@ -51,12 +51,12 @@ const StaffPayments = () => {
           appointments!inner (
             appointment_date,
             start_time,
-            staff_id,
+            business_id,
             customers (first_name, last_name),
             services (name)
           )
         `)
-        .eq('appointments.staff_id', session.staff.id)
+        .eq('appointments.business_id', session.staff.business_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -138,10 +138,10 @@ const StaffPayments = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">
-          Ödemelerim
+          Ödemeler
         </h1>
         <p className="text-muted-foreground">
-          Randevularınıza ait ödeme bilgilerini görüntüleyin.
+          İşletme ödemelerini görüntüleyin ve yönetin.
         </p>
       </div>
 

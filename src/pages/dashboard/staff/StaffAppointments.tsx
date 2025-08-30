@@ -49,7 +49,7 @@ const StaffAppointments = () => {
           customers (first_name, last_name, phone, email),
           services (name)
         `)
-        .eq('staff_id', session.staff.id)
+        .eq('business_id', session.staff.business_id)
         .order('appointment_date', { ascending: true })
         .order('start_time', { ascending: true });
 
@@ -109,10 +109,10 @@ const StaffAppointments = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">
-          Randevularım
+          Randevular
         </h1>
         <p className="text-muted-foreground">
-          Size atanmış randevuları görüntüleyin ve yönetin.
+          İşletme randevularını görüntüleyin ve yönetin.
         </p>
       </div>
 
@@ -120,7 +120,7 @@ const StaffAppointments = () => {
         <Card>
           <CardContent className="py-8 text-center">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Henüz size atanmış randevu bulunmuyor.</p>
+            <p className="text-muted-foreground">Henüz randevu kaydı bulunmuyor.</p>
           </CardContent>
         </Card>
       ) : (
