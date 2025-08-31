@@ -124,10 +124,7 @@ export function StaffSidebar({ staffName, businessName }: StaffSidebarProps) {
     return currentPath.startsWith(path);
   };
 
-  const getNavClassName = (isActiveRoute: boolean, hasAccess: boolean = true) => {
-    if (!hasAccess) {
-      return "opacity-50 cursor-not-allowed";
-    }
+  const getNavClassName = (isActiveRoute: boolean) => {
     return isActiveRoute 
       ? "text-primary" 
       : "hover:bg-secondary/30";
@@ -195,21 +192,19 @@ export function StaffSidebar({ staffName, businessName }: StaffSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 px-1">
-              {mainMenuItems.map((item) => {
+              {mainMenuItems.filter(item => hasPermission(item.permission)).map((item) => {
                 const isActiveRoute = isActive(item.url);
-                const hasAccess = hasPermission(item.permission);
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                        <NavLink 
-                         to={hasAccess ? item.url : "#"} 
+                         to={item.url} 
                          end={item.url === "/staff-dashboard"}
-                         className={`flex items-center ${collapsed && !isMobileDevice ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute, hasAccess)}`}
+                         className={`flex items-center ${collapsed && !isMobileDevice ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                          title={(collapsed && !isMobileDevice) ? item.title : undefined}
-                         onClick={!hasAccess ? (e) => e.preventDefault() : undefined}
                        >
-                        <div className={`${collapsed && !isMobileDevice ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute && hasAccess ? 'text-primary' : hasAccess ? 'bg-secondary group-hover:bg-primary/10' : 'bg-secondary/50'}`}>
-                          <item.icon className={`${collapsed && !isMobileDevice ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute && hasAccess ? 'text-primary' : ''}`} />
+                        <div className={`${collapsed && !isMobileDevice ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className={`${collapsed && !isMobileDevice ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                         </div>
                         {(!collapsed || isMobileDevice) && (
                           <div className="flex-1 min-w-0">
@@ -217,7 +212,7 @@ export function StaffSidebar({ staffName, businessName }: StaffSidebarProps) {
                               {item.title}
                             </span>
                             <span className="text-xs text-muted-foreground truncate block">
-                              {hasAccess ? item.description : "Yetki gerekli"}
+                              {item.description}
                             </span>
                           </div>
                         )}
@@ -237,20 +232,18 @@ export function StaffSidebar({ staffName, businessName }: StaffSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 px-1">
-              {businessOperationsItems.map((item) => {
+              {businessOperationsItems.filter(item => hasPermission(item.permission)).map((item) => {
                 const isActiveRoute = isActive(item.url);
-                const hasAccess = hasPermission(item.permission);
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                        <NavLink 
-                         to={hasAccess ? item.url : "#"} 
-                         className={`flex items-center ${collapsed && !isMobileDevice ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute, hasAccess)}`}
+                         to={item.url} 
+                         className={`flex items-center ${collapsed && !isMobileDevice ? 'justify-center px-0' : 'gap-3 px-3'} py-3 rounded-xl transition-all duration-300 group ${getNavClassName(isActiveRoute)}`}
                          title={(collapsed && !isMobileDevice) ? item.title : undefined}
-                         onClick={!hasAccess ? (e) => e.preventDefault() : undefined}
                        >
-                        <div className={`${collapsed && !isMobileDevice ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute && hasAccess ? 'text-primary' : hasAccess ? 'bg-secondary group-hover:bg-primary/10' : 'bg-secondary/50'}`}>
-                          <item.icon className={`${collapsed && !isMobileDevice ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute && hasAccess ? 'text-primary' : ''}`} />
+                        <div className={`${collapsed && !isMobileDevice ? 'p-0' : 'p-2'} rounded-lg transition-colors ${isActiveRoute ? 'text-primary' : 'bg-secondary group-hover:bg-primary/10'}`}>
+                          <item.icon className={`${collapsed && !isMobileDevice ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${isActiveRoute ? 'text-primary' : ''}`} />
                         </div>
                         {(!collapsed || isMobileDevice) && (
                           <div className="flex-1 min-w-0">
@@ -258,7 +251,7 @@ export function StaffSidebar({ staffName, businessName }: StaffSidebarProps) {
                               {item.title}
                             </span>
                             <span className="text-xs text-muted-foreground truncate block">
-                              {hasAccess ? item.description : "Yetki gerekli"}
+                              {item.description}
                             </span>
                           </div>
                         )}

@@ -6,6 +6,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { StaffDashboardLayout } from "@/components/dashboard/StaffDashboardLayout";
+import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import StaffAppointments from "./dashboard/staff/StaffAppointments";
 import StaffCustomers from "./dashboard/staff/StaffCustomers";
 import StaffPayments from "./dashboard/staff/StaffPayments";
@@ -29,6 +30,7 @@ interface StaffSession {
 }
 
 const StaffDashboardOverview = () => {
+  const { hasPermission } = useStaffPermissions();
 
   const quickActions = [
     {
@@ -36,21 +38,24 @@ const StaffDashboardOverview = () => {
       description: "Bugünkü randevuları görün",
       icon: Calendar,
       href: "/staff-dashboard/appointments",
-      color: "bg-blue-500/10 text-blue-600"
+      color: "bg-blue-500/10 text-blue-600",
+      permission: "view_appointments"
     },
     {
       title: "Müşteriler",
       description: "Müşteri bilgilerini yönetin", 
       icon: Users,
       href: "/staff-dashboard/customers",
-      color: "bg-green-500/10 text-green-600"
+      color: "bg-green-500/10 text-green-600",
+      permission: "view_customers"
     },
     {
       title: "Ödemeler",
       description: "Ödeme işlemlerini görün",
       icon: CreditCard,
       href: "/staff-dashboard/payments",
-      color: "bg-purple-500/10 text-purple-600"
+      color: "bg-purple-500/10 text-purple-600",
+      permission: "view_payments"
     }
   ];
 
@@ -67,7 +72,7 @@ const StaffDashboardOverview = () => {
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {quickActions.map((action) => (
+        {quickActions.filter(action => hasPermission(action.permission)).map((action) => (
           <Card 
             key={action.title}
             className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300 cursor-pointer group"
