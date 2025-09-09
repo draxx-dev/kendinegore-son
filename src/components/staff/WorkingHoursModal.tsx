@@ -138,7 +138,6 @@ export const WorkingHoursModal = ({
           is_closed: wh.is_closed || false
         }));
 
-      console.log('Inserting working hours:', hoursToInsert);
 
       const { error: insertError } = await supabase
         .from('working_hours')

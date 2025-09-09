@@ -19,6 +19,30 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  // Business ID'yi set et
+  useEffect(() => {
+    const setBusinessId = async () => {
+      if (user) {
+        try {
+          const { data: businesses, error } = await supabase
+            .from('businesses')
+            .select('id')
+            .eq('owner_id', user.id)
+            .maybeSingle();
+
+          if (error) throw error;
+          if (businesses) {
+            localStorage.setItem('businessId', businesses.id);
+          }
+        } catch (error) {
+          console.error('Business ID fetch error:', error);
+        }
+      }
+    };
+
+    setBusinessId();
+  }, [user]);
+
   useEffect(() => {
     // Auth state listener'ı ilk olarak kur
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

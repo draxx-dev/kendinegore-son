@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateCustomerModal } from "@/components/customers/CreateCustomerModal";
 import { Calendar, Save, X, UserPlus } from "lucide-react";
+import { useSMSIntegration } from "@/hooks/useSMSIntegration";
 
 interface CreateAppointmentModalProps {
   open: boolean;
@@ -34,6 +35,7 @@ interface Service {
 interface Staff {
   id: string;
   name: string;
+  is_active: boolean;
 }
 
 export const CreateAppointmentModal = ({ 
@@ -47,6 +49,7 @@ export const CreateAppointmentModal = ({
   const [loading, setLoading] = useState(false);
   const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     customer_id: "",
     staff_id: "",
@@ -56,6 +59,7 @@ export const CreateAppointmentModal = ({
   });
 
   const { toast } = useToast();
+  const { sendBusinessNotification } = useSMSIntegration(businessId);
 
   useEffect(() => {
     if (open) {
@@ -65,6 +69,21 @@ export const CreateAppointmentModal = ({
 
   const fetchData = async () => {
     try {
+      // Get business ID first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Kullanıcı bulunamadı");
+      
+      const { data: businesses, error: businessError } = await supabase
+        .from('businesses')
+        .select('id, phone')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+
+      if (businessError) throw businessError;
+      if (businesses) {
+        setBusinessId(businesses.id);
+      }
+
       const [customersRes, servicesRes, staffRes] = await Promise.all([
         supabase.from('customers').select('*').order('first_name'),
         supabase.from('services').select('*').eq('is_active', true).order('name'),
@@ -110,7 +129,87 @@ export const CreateAppointmentModal = ({
     const totalMinutes = hours * 60 + minutes + durationMinutes;
     const endHours = Math.floor(totalMinutes / 60);
     const endMinutes = totalMinutes % 60;
-    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+    
+    // 24 saat formatını aşarsa düzelt (sadece gerekirse)
+    const adjustedEndHours = endHours >= 24 ? endHours - 24 : endHours;
+    
+    return `${adjustedEndHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+  };
+
+  // Belirli bir saatte uygun personel bul
+  const findAvailableStaff = async (date: string, startTime: string, durationMinutes: number) => {
+    const endTime = calculateEndTime(startTime, durationMinutes);
+    
+    // O gün o saatte mevcut randevuları kontrol et
+    const { data: existingAppointments, error } = await supabase
+      .from('appointments')
+      .select('staff_id, start_time, end_time')
+      .eq('appointment_date', date)
+      .eq('status', 'scheduled');
+
+    if (error) throw error;
+
+    // Her personel için müsaitlik kontrolü
+    for (const staffMember of staff.filter(s => s.is_active)) {
+      let isAvailable = true;
+      
+      // Bu personelin o saatte randevusu var mı kontrol et
+      for (const appointment of existingAppointments || []) {
+        if (appointment.staff_id === staffMember.id) {
+          // Zaman çakışması kontrolü
+          const existingStart = appointment.start_time;
+          const existingEnd = appointment.end_time;
+          
+          // Yeni randevu mevcut randevu ile çakışıyor mu?
+          if (
+            (startTime >= existingStart && startTime < existingEnd) ||
+            (endTime > existingStart && endTime <= existingEnd) ||
+            (startTime <= existingStart && endTime >= existingEnd)
+          ) {
+            isAvailable = false;
+            break;
+          }
+        }
+      }
+      
+      if (isAvailable) {
+        return staffMember.id;
+      }
+    }
+    
+    return null; // Uygun personel bulunamadı
+  };
+
+  // Belirli bir personelin müsait olup olmadığını kontrol et
+  const checkStaffAvailability = async (staffId: string, date: string, startTime: string, durationMinutes: number) => {
+    const endTime = calculateEndTime(startTime, durationMinutes);
+    
+    // Bu personelin o gün o saatte randevusu var mı kontrol et
+    const { data: existingAppointments, error } = await supabase
+      .from('appointments')
+      .select('start_time, end_time')
+      .eq('appointment_date', date)
+      .eq('staff_id', staffId)
+      .eq('status', 'scheduled');
+
+    if (error) throw error;
+
+    // Zaman çakışması kontrolü
+    for (const appointment of existingAppointments || []) {
+      const existingStart = appointment.start_time;
+      const existingEnd = appointment.end_time;
+      
+      // Yeni randevu mevcut randevu ile çakışıyor mu?
+      if (
+        (startTime >= existingStart && startTime < existingEnd) ||
+        (endTime > existingStart && endTime <= existingEnd) ||
+        (startTime <= existingStart && endTime >= existingEnd)
+      ) {
+        return false; // Çakışma var
+      }
+    }
+    
+    return true; // Müsait
   };
 
   const toggleServiceSelection = (serviceId: string) => {
@@ -142,85 +241,156 @@ export const CreateAppointmentModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.customer_id || selectedServices.length === 0 || !formData.appointment_date || !formData.start_time) {
+    if (!formData.customer_id || !formData.appointment_date || !formData.start_time || selectedServices.length === 0) {
       toast({
         title: "Hata",
-        description: "Lütfen tüm zorunlu alanları doldurun.",
+        description: "Lütfen tüm gerekli alanları doldurun.",
         variant: "destructive",
       });
       return;
     }
 
     setLoading(true);
-
     try {
       const businessId = await getBusinessId();
-      const totalDuration = calculateTotalDuration();
-      const totalPrice = calculateTotalPrice();
-      const endTime = calculateEndTime(formData.start_time, totalDuration);
-
-      // Generate a single group ID for all services in this appointment
-      const appointmentGroupId = crypto.randomUUID();
-
-      // Determine staff assignment
-      let finalStaffId = formData.staff_id;
       
-      if (!finalStaffId && staff.length > 0) {
-        // If no staff selected, assign randomly from available staff
-        const randomIndex = Math.floor(Math.random() * staff.length);
-        finalStaffId = staff[randomIndex].id;
+      // Get customer and service details for SMS
+      const customer = customers.find(c => c.id === formData.customer_id);
+      const selectedServiceNames = services
+        .filter(s => selectedServices.includes(s.id))
+        .map(s => s.name)
+        .join(', ');
+
+      // Tek randevu kaydı oluştur - tüm servisleri array olarak ekle
+      // Personel atanmamışsa uygun personel bul
+      let staffId = formData.staff_id;
+      if (!staffId) {
+        // Otomatik personel atama - müsait olanı bul
+        staffId = await findAvailableStaff(formData.appointment_date, formData.start_time, calculateTotalDuration());
+        if (!staffId) {
+          throw new Error('Seçilen saatte müsait personel bulunamadı. Lütfen farklı bir saat seçin.');
+        }
+      } else {
+        // Seçilen personelin müsait olup olmadığını kontrol et
+        const isAvailable = await checkStaffAvailability(staffId, formData.appointment_date, formData.start_time, calculateTotalDuration());
+        if (!isAvailable) {
+          throw new Error('Seçilen personel bu saatte müsait değil. Lütfen farklı bir personel veya saat seçin.');
+        }
+      }
+      
+      // Toplam süreye göre tek end_time hesapla
+      const totalDuration = calculateTotalDuration();
+      const endTime = calculateEndTime(formData.start_time, totalDuration);
+      
+
+      // Tek randevu kaydı oluştur - tüm servisleri array olarak ekle
+      const { data: appointment, error: appointmentError } = await supabase
+        .from('appointments')
+        .insert({
+          business_id: businessId,
+          customer_id: formData.customer_id,
+          staff_id: staffId,
+          service_ids: selectedServices, // Array olarak tüm servisler
+          appointment_date: formData.appointment_date,
+          start_time: formData.start_time,
+          end_time: endTime,
+          status: 'scheduled',
+          total_price: calculateTotalPrice(), // Toplam fiyat
+          notes: formData.notes || null
+        })
+        .select('id')
+        .single();
+
+      if (appointmentError) {
+        console.error('❌ DEBUG - Elle randevu oluşturma hatası:', appointmentError);
+        throw new Error(`Randevu oluşturulamadı: ${appointmentError.message}`);
       }
 
-      // Create appointments for each selected service with the same group_id
-      const appointmentPromises = selectedServices.map(async (serviceId) => {
-        const { error } = await supabase
-          .from('appointments')
-          .insert([{
-            business_id: businessId,
-            customer_id: formData.customer_id,
-            service_id: serviceId,
-            staff_id: finalStaffId || null,
-            appointment_date: formData.appointment_date,
-            start_time: formData.start_time,
-            end_time: endTime,
-            total_price: totalPrice,
-            appointment_group_id: appointmentGroupId,
-            notes: formData.notes || null,
-            status: 'scheduled'
-          }]);
 
-        if (error) throw error;
-      });
+      // Elle oluşturulan randevular için müşteriye SMS gönder (online randevu ile aynı içerik)
+      try {
+        const customer = customers.find(c => c.id === formData.customer_id);
+        if (customer && customer.phone) {
+          // İşletme bilgilerini al
+          const { data: business, error: businessError } = await supabase
+            .from('businesses')
+            .select('name, phone')
+            .eq('id', businessId)
+            .single();
 
-      await Promise.all(appointmentPromises);
+          if (businessError) throw businessError;
+
+          const appointmentDate = new Date(formData.appointment_date);
+          const formattedDate = appointmentDate.toLocaleDateString('tr-TR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+
+          // Türkçe karakterleri temizle
+          const cleanTurkishChars = (str: string) => {
+            return str
+              .replace(/ğ/g, 'g')
+              .replace(/ü/g, 'u')
+              .replace(/ş/g, 's')
+              .replace(/ı/g, 'i')
+              .replace(/ö/g, 'o')
+              .replace(/ç/g, 'c')
+              .replace(/Ğ/g, 'G')
+              .replace(/Ü/g, 'U')
+              .replace(/Ş/g, 'S')
+              .replace(/İ/g, 'I')
+              .replace(/Ö/g, 'O')
+              .replace(/Ç/g, 'C');
+          };
+          
+          // Online randevu ile aynı mesaj içeriği
+          const customerMessage = `${formattedDate} tarihli ${cleanTurkishChars(business.name)} isletmesinden almis oldugunuz randevunuz sisteme kaydedilmistir. Iptal ettirmek icin isletmeyi arayabilirsiniz ${business.phone || 'bilinmiyor'}. KendineGore`;
+          
+          // SMS gönder
+          const { netGSMService } = await import('@/integrations/supabase/sms');
+          await netGSMService.sendCustomerConfirmation(
+            customer.phone,
+            customerMessage,
+            businessId!
+          );
+        }
+      } catch (smsError) {
+        console.error('SMS gönderim hatası:', smsError);
+        // SMS hatası randevu oluşturmayı engellemez
+      }
 
       toast({
         title: "Başarılı!",
-        description: `${selectedServices.length} randevu oluşturuldu.`,
+        description: "Randevu başarıyla oluşturuldu.",
       });
-
-      // Form'u temizle
-      setFormData({
-        customer_id: "",
-        staff_id: "",
-        appointment_date: "",
-        start_time: "",
-        notes: ""
-      });
-      setSelectedServices([]);
 
       onSuccess();
       onOpenChange(false);
-    } catch (error) {
+      resetForm();
+    } catch (error: any) {
+      console.error('Appointment creation error:', error);
       toast({
         title: "Hata",
-        description: "Randevu oluşturulurken bir hata oluştu.",
+        description: error.message || "Randevu oluşturulurken bir hata oluştu.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
+  };
+
+
+
+  const resetForm = () => {
+    setFormData({
+      customer_id: "",
+      staff_id: "",
+      appointment_date: "",
+      start_time: "",
+      notes: ""
+    });
+    setSelectedServices([]);
   };
 
   return (

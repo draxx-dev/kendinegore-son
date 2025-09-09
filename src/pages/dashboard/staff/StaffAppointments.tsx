@@ -22,16 +22,12 @@ interface Appointment {
   status: string;
   total_price: number;
   notes: string | null;
-  appointment_group_id: string;
+  service_ids: string[];
   customers: {
     first_name: string;
     last_name: string;
     phone: string;
     email?: string;
-  };
-  services: {
-    name: string;
-    duration_minutes: number;
   };
   staff: {
     id: string;
@@ -74,6 +70,15 @@ interface GroupedAppointment {
   }>;
 }
 
+interface WorkingHour {
+  id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_closed: boolean;
+  staff_id: string | null;
+}
+
 const StaffAppointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [groupedAppointments, setGroupedAppointments] = useState<GroupedAppointment[]>([]);
@@ -85,29 +90,32 @@ const StaffAppointments = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<GroupedAppointment | null>(null);
   const [isCalendarView, setIsCalendarView] = useState(false);
+  const [workingHours, setWorkingHours] = useState<WorkingHour[]>([]);
 
   const { toast } = useToast();
 
   useEffect(() => {
     fetchAppointments();
+    fetchWorkingHours();
   }, [selectedDate, statusFilter]);
 
-  const groupAppointments = (appointments: Appointment[]): GroupedAppointment[] => {
-    const groupMap = new Map<string, GroupedAppointment>();
-    
-    appointments.forEach(appointment => {
-      const groupId = appointment.appointment_group_id;
-      
-      if (groupMap.has(groupId)) {
-        const existing = groupMap.get(groupId)!;
-        existing.services.push(appointment.services);
-        existing.appointment_ids.push(appointment.id);
-        if (appointment.payments) {
-          existing.payments.push(...appointment.payments);
+  const groupAppointments = async (appointments: Appointment[]): Promise<GroupedAppointment[]> => {
+    // Her randevu için service_ids'den servis bilgilerini çek
+    const groupedAppointments = await Promise.all(
+      appointments.map(async (appointment) => {
+        // service_ids array'inden servis bilgilerini çek
+        const { data: services, error } = await supabase
+          .from('services')
+          .select('name, duration_minutes')
+          .in('id', appointment.service_ids);
+
+        if (error) {
+          console.error('Service fetch error:', error);
+          return null;
         }
-      } else {
-        groupMap.set(groupId, {
-          appointment_group_id: groupId,
+
+        return {
+          appointment_group_id: appointment.id, // Tek randevu olduğu için id kullan
           appointment_date: appointment.appointment_date,
           start_time: appointment.start_time,
           end_time: appointment.end_time,
@@ -115,15 +123,15 @@ const StaffAppointments = () => {
           total_price: appointment.total_price,
           notes: appointment.notes,
           customers: appointment.customers,
-          services: [appointment.services],
+          services: services || [], // Servis bilgileri array olarak
           staff: appointment.staff,
-          appointment_ids: [appointment.id],
+          appointment_ids: [appointment.id], // Tek randevu olduğu için tek id
           payments: appointment.payments || []
-        });
-      }
-    });
-    
-    return Array.from(groupMap.values());
+        };
+      })
+    );
+
+    return groupedAppointments.filter(Boolean) as GroupedAppointment[];
   };
 
   const fetchAppointments = async () => {
@@ -138,7 +146,6 @@ const StaffAppointments = () => {
         .select(`
           *,
           customers(first_name, last_name, phone, email),
-          services(name, duration_minutes),
           staff(id, name),
           payments(payment_method, payment_status, amount)
         `)
@@ -158,7 +165,7 @@ const StaffAppointments = () => {
       if (error) throw error;
       setAppointments(data || []);
       
-      const grouped = groupAppointments(data || []);
+      const grouped = await groupAppointments(data || []);
       setGroupedAppointments(grouped);
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -172,12 +179,35 @@ const StaffAppointments = () => {
     }
   };
 
+  const fetchWorkingHours = async () => {
+    try {
+      const staffSession = localStorage.getItem('staff_session');
+      if (!staffSession) return;
+
+      const session = JSON.parse(staffSession);
+      
+      const { data, error } = await supabase
+        .from('working_hours')
+        .select('*')
+        .eq('business_id', session.staff.business_id)
+        .is('staff_id', null); // Genel işletme çalışma saatleri
+
+      if (error) throw error;
+      if (data) {
+        setWorkingHours(data);
+      }
+    } catch (error) {
+      console.error('Error fetching working hours:', error);
+    }
+  };
+
   const updateAppointmentStatus = async (groupedAppointment: GroupedAppointment, newStatus: string) => {
     try {
+      // Tek randevu olduğu için appointment_group_id kullan
       const { error } = await supabase
         .from('appointments')
         .update({ status: newStatus })
-        .in('id', groupedAppointment.appointment_ids);
+        .eq('id', groupedAppointment.appointment_group_id);
 
       if (error) throw error;
 
@@ -292,6 +322,21 @@ const StaffAppointments = () => {
           }}
         >
           Ödemeyi Düzenle
+        </Button>
+      );
+    }
+
+    // İptal edilen randevular için iptali geri alma seçeneği
+    if (groupedAppointment.status === 'cancelled') {
+      actions.push(
+        <Button 
+          key="uncancel"
+          size="sm" 
+          variant="outline"
+          onClick={() => updateAppointmentStatus(groupedAppointment, 'scheduled')}
+          className="text-green-600 hover:text-green-700"
+        >
+          İptali Geri Al
         </Button>
       );
     }
@@ -446,6 +491,7 @@ const StaffAppointments = () => {
           <CalendarView 
             selectedDate={selectedDate}
             appointments={appointments}
+            workingHours={workingHours}
             onStatusUpdate={(groupId, status) => {
               const groupedAppointment = groupedAppointments.find(g => g.appointment_group_id === groupId);
               if (groupedAppointment) {
@@ -565,7 +611,7 @@ const StaffAppointments = () => {
             <PaymentModal
               open={showPaymentModal}
               onOpenChange={setShowPaymentModal}
-              appointmentId={selectedAppointment.appointment_ids[0]}
+              appointmentId={selectedAppointment.appointment_group_id}
               totalAmount={selectedAppointment.total_price}
               customerName={`${selectedAppointment.customers.first_name} ${selectedAppointment.customers.last_name}`}
               onSuccess={fetchAppointments}

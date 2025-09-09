@@ -15,8 +15,18 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format, isToday, startOfWeek, endOfWeek } from "date-fns";
 import { tr } from "date-fns/locale";
+import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 
 const Overview = () => {
+  const [businessId, setBusinessId] = useState<string | undefined>();
+
+  useEffect(() => {
+    // Business ID'yi localStorage'dan al
+    const storedBusinessId = localStorage.getItem('businessId');
+    if (storedBusinessId) {
+      setBusinessId(storedBusinessId);
+    }
+  }, []);
   const [dashboardData, setDashboardData] = useState({
     todayAppointments: 0,
     totalCustomers: 0,
@@ -186,7 +196,8 @@ const Overview = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <SubscriptionGuard businessId={businessId}>
+      <div className="space-y-8">
       {/* Welcome Section */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-foreground mb-3">
@@ -391,6 +402,7 @@ const Overview = () => {
         </Card>
       </div>
     </div>
+    </SubscriptionGuard>
   );
 };
 

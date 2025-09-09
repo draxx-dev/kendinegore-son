@@ -19,7 +19,8 @@ const AuthPage = () => {
     firstName: "",
     lastName: "",
     phone: "",
-    businessEmail: ""
+    businessEmail: "",
+    country_code: "+90"
   });
 
   const { toast } = useToast();
@@ -36,7 +37,7 @@ const AuthPage = () => {
     checkUser();
   }, [navigate]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -134,6 +135,7 @@ const AuthPage = () => {
             first_name: formData.firstName,
             last_name: formData.lastName,
             phone: formData.phone,
+            country_code: formData.country_code,
           }
         }
       });
@@ -170,8 +172,15 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen w-full bg-white relative overflow-hidden flex items-center justify-center p-4">
+      {/* Indigo Center Glow */}
+      <div 
+        className="fixed inset-0 z-0 pointer-events-none" 
+        style={{ 
+          backgroundImage: `radial-gradient(circle at 50% 50%, #6366f1, transparent)`,
+        }} 
+      />
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
@@ -340,14 +349,78 @@ const AuthPage = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefon</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      placeholder="0555 123 45 67"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                    />
+                    <div className="flex gap-2">
+                      <select
+                        name="country_code"
+                        value={formData.country_code}
+                        onChange={handleInputChange}
+                        className="flex h-10 w-24 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="+90">🇹🇷 +90</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+33">🇫🇷 +33</option>
+                        <option value="+39">🇮🇹 +39</option>
+                        <option value="+34">🇪🇸 +34</option>
+                        <option value="+31">🇳🇱 +31</option>
+                        <option value="+32">🇧🇪 +32</option>
+                        <option value="+41">🇨🇭 +41</option>
+                        <option value="+43">🇦🇹 +43</option>
+                        <option value="+45">🇩🇰 +45</option>
+                        <option value="+46">🇸🇪 +46</option>
+                        <option value="+47">🇳🇴 +47</option>
+                        <option value="+358">🇫🇮 +358</option>
+                        <option value="+420">🇨🇿 +420</option>
+                        <option value="+421">🇸🇰 +421</option>
+                        <option value="+36">🇭🇺 +36</option>
+                        <option value="+40">🇷🇴 +40</option>
+                        <option value="+359">🇧🇬 +359</option>
+                        <option value="+385">🇭🇷 +385</option>
+                        <option value="+386">🇸🇮 +386</option>
+                        <option value="+372">🇪🇪 +372</option>
+                        <option value="+371">🇱🇻 +371</option>
+                        <option value="+370">🇱🇹 +370</option>
+                        <option value="+48">🇵🇱 +48</option>
+                        <option value="+7">🇷🇺 +7</option>
+                        <option value="+380">🇺🇦 +380</option>
+                        <option value="+375">🇧🇾 +375</option>
+                        <option value="+370">🇱🇹 +370</option>
+                        <option value="+371">🇱🇻 +371</option>
+                        <option value="+372">🇪🇪 +372</option>
+                        <option value="+386">🇸🇮 +386</option>
+                        <option value="+385">🇭🇷 +385</option>
+                        <option value="+359">🇧🇬 +359</option>
+                        <option value="+40">🇷🇴 +40</option>
+                        <option value="+36">🇭🇺 +36</option>
+                        <option value="+421">🇸🇰 +421</option>
+                        <option value="+420">🇨🇿 +420</option>
+                        <option value="+358">🇫🇮 +358</option>
+                        <option value="+47">🇳🇴 +47</option>
+                        <option value="+46">🇸🇪 +46</option>
+                        <option value="+45">🇩🇰 +45</option>
+                        <option value="+43">🇦🇹 +43</option>
+                        <option value="+41">🇨🇭 +41</option>
+                        <option value="+32">🇧🇪 +32</option>
+                        <option value="+31">🇳🇱 +31</option>
+                        <option value="+34">🇪🇸 +34</option>
+                        <option value="+39">🇮🇹 +39</option>
+                        <option value="+33">🇫🇷 +33</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+90">🇹🇷 +90</option>
+                      </select>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="555 123 45 67"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
                   
                   <div className="space-y-2">

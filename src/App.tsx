@@ -10,6 +10,8 @@ import PublicBooking from "./pages/PublicBooking";
 import NotFound from "./pages/NotFound";
 import { StaffLogin } from "./pages/StaffLogin";
 import { StaffDashboard } from "./pages/StaffDashboard";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +28,9 @@ const App = () => (
           <Route path="/staff-dashboard/*" element={<StaffDashboard />} />
           <Route path="/dashboard/*" element={<Dashboard />} />
           <Route path="/randevu/:slug" element={<PublicBooking />} />
+          {/* Admin Panel Routes */}
+          <Route path="/admin-e4553757bda6d71e8b0b0306040ece0d/login" element={<AdminLogin />} />
+          <Route path="/admin-e4553757bda6d71e8b0b0306040ece0d/*" element={<AdminDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

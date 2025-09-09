@@ -29,6 +29,15 @@ interface PaymentSummary {
   credit_amount: number;
   completed_count: number;
   pending_count: number;
+  payments: Array<{
+    payment_date: string;
+    customer_name: string;
+    service_name: string;
+    amount: number;
+    payment_method: string;
+    payment_status: string;
+    notes: string;
+  }>;
 }
 
 interface CustomerDebt {
@@ -49,6 +58,7 @@ interface CustomerDebt {
   }>;
 }
 
+
 const Payments = () => {
   const [paymentSummary, setPaymentSummary] = useState<PaymentSummary>({
     total_amount: 0,
@@ -56,7 +66,8 @@ const Payments = () => {
     card_amount: 0,
     credit_amount: 0,
     completed_count: 0,
-    pending_count: 0
+    pending_count: 0,
+    payments: []
   });
   const [customerDebts, setCustomerDebts] = useState<CustomerDebt[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +78,7 @@ const Payments = () => {
   const [debtSortBy, setDebtSortBy] = useState<'debt' | 'oldest' | 'expected'>('debt');
   const [expandedDebt, setExpandedDebt] = useState<string | null>(null);
   const [creditStats, setCreditStats] = useState({ collected: 0, pending: 0 });
+  
 
   const { toast } = useToast();
 
@@ -117,12 +129,46 @@ const Payments = () => {
           amount,
           payment_method,
           payment_status,
-          appointments!inner(appointment_date)
+          payment_date,
+          notes,
+          appointments!inner(
+            appointment_date,
+            start_time,
+            service_id,
+            service_ids,
+            customers(first_name, last_name)
+          )
         `)
         .gte('appointments.appointment_date', start)
         .lte('appointments.appointment_date', end);
 
       if (error) throw error;
+
+      // Services bilgilerini ayrı olarak çek
+      const serviceIds = new Set<string>();
+      payments.forEach(payment => {
+        if (payment.appointments?.service_id) {
+          serviceIds.add(payment.appointments.service_id);
+        }
+        if (payment.appointments?.service_ids) {
+          payment.appointments.service_ids.forEach((id: string) => serviceIds.add(id));
+        }
+      });
+
+      let servicesMap: Record<string, string> = {};
+      if (serviceIds.size > 0) {
+        const { data: services } = await supabase
+          .from('services')
+          .select('id, name')
+          .in('id', Array.from(serviceIds));
+        
+        if (services) {
+          servicesMap = services.reduce((acc, service) => {
+            acc[service.id] = service.name;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+      }
 
       const summary = payments.reduce((acc, payment) => {
         const amount = Number(payment.amount);
@@ -152,11 +198,34 @@ const Payments = () => {
         card_amount: 0,
         credit_amount: 0,
         completed_count: 0,
-        pending_count: 0
+        pending_count: 0,
+        payments: payments.map(payment => {
+          let serviceName = '';
+          if (payment.appointments?.service_id) {
+            serviceName = servicesMap[payment.appointments.service_id] || `Hizmet ID: ${payment.appointments.service_id}`;
+          } else if (payment.appointments?.service_ids && payment.appointments.service_ids.length > 0) {
+            const serviceNames = payment.appointments.service_ids
+              .map((id: string) => servicesMap[id] || `ID: ${id}`)
+              .join(', ');
+            serviceName = serviceNames;
+          }
+
+          return {
+            payment_date: payment.payment_date || payment.appointments?.appointment_date,
+            customer_name: payment.appointments?.customers ? 
+              `${payment.appointments.customers.first_name} ${payment.appointments.customers.last_name}` : '',
+            service_name: serviceName,
+            amount: payment.amount,
+            payment_method: payment.payment_method,
+            payment_status: payment.payment_status,
+            notes: payment.notes
+          };
+        })
       });
 
       setPaymentSummary(summary);
     } catch (error) {
+      console.error('Payment data fetch error:', error);
       toast({
         title: "Hata",
         description: "Ödeme verileri yüklenirken bir hata oluştu.",
@@ -193,8 +262,8 @@ const Payments = () => {
             id,
             appointment_date,
             start_time,
+            service_ids,
             customers!inner(id, first_name, last_name, phone),
-            services!inner(name),
             staff(name)
           )
         `)
@@ -205,16 +274,30 @@ const Payments = () => {
 
       const debtsMap = new Map<string, CustomerDebt>();
 
-      creditPayments.forEach(payment => {
+      // Process each payment and fetch service details
+      for (const payment of creditPayments) {
         const customer = payment.appointments.customers;
         const appointment = payment.appointments;
         const customerId = customer.id;
+        
+        // Fetch service details from service_ids array
+        let serviceName = 'Bilinmiyor';
+        if (appointment.service_ids && appointment.service_ids.length > 0) {
+          const { data: services } = await supabase
+            .from('services')
+            .select('name')
+            .in('id', appointment.service_ids);
+          
+          if (services && services.length > 0) {
+            serviceName = services.map(s => s.name).join(', ');
+          }
+        }
         
         const appointmentDetail = {
           id: appointment.id,
           appointment_date: appointment.appointment_date,
           start_time: appointment.start_time,
-          service_name: appointment.services?.name || 'Bilinmiyor',
+          service_name: serviceName,
           staff_name: appointment.staff?.name || 'Belirtilmemiş',
           amount: Number(payment.amount)
         };
@@ -248,7 +331,7 @@ const Payments = () => {
             appointments: [appointmentDetail]
           });
         }
-      });
+      }
 
       let sortedDebts = Array.from(debtsMap.values());
       
@@ -370,12 +453,85 @@ const Payments = () => {
   };
 
   const exportReport = () => {
-    toast({
-      title: "Rapor Hazırlanıyor",
-      description: "Excel raporu oluşturuluyor...",
-    });
-    // Export functionality will be implemented here
+    try {
+      // Tarih aralığını al
+      const dateRange = getDateRange();
+      
+      // CSV formatında rapor oluştur
+      const csvContent = generateCSVReport();
+      
+      // Dosya adını oluştur
+      const fileName = `odeme_raporu_${dateRange.start}_${dateRange.end}.csv`;
+      
+      // Blob oluştur ve indir
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Rapor İndirildi",
+        description: `${fileName} dosyası başarıyla indirildi.`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Hata",
+        description: "Rapor indirilirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
   };
+
+  const generateCSVReport = () => {
+    const dateRange = getDateRange();
+    const headers = [
+      'Tarih',
+      'Müşteri Adı',
+      'Hizmet',
+      'Tutar',
+      'Ödeme Yöntemi',
+      'Durum',
+      'Notlar'
+    ];
+    
+    // CSV başlıklarını oluştur
+    let csvContent = headers.join(',') + '\n';
+    
+    // Ödeme verilerini CSV formatına çevir
+    if (paymentSummary && paymentSummary.payments) {
+      paymentSummary.payments.forEach((payment: any) => {
+        const row = [
+          payment.payment_date || '',
+          payment.customer_name || '',
+          payment.service_name || '',
+          payment.amount || 0,
+          payment.payment_method || '',
+          payment.payment_status || '',
+          (payment.notes || '').replace(/,/g, ';') // Virgül içeren notları noktalı virgül ile değiştir
+        ];
+        csvContent += row.join(',') + '\n';
+      });
+    }
+    
+    // Özet bilgileri ekle
+    csvContent += '\n';
+    csvContent += 'ÖZET BİLGİLER\n';
+    csvContent += `Toplam Gelir,${paymentSummary.total_amount}\n`;
+    csvContent += `Nakit,${paymentSummary.cash_amount}\n`;
+    csvContent += `Kart,${paymentSummary.card_amount}\n`;
+    csvContent += `Veresiye,${paymentSummary.credit_amount}\n`;
+    csvContent += `Tamamlanan,${paymentSummary.completed_count}\n`;
+    csvContent += `Bekleyen,${paymentSummary.pending_count}\n`;
+    
+    return csvContent;
+  };
+
 
   if (loading) {
     return (
@@ -661,6 +817,7 @@ const Payments = () => {
         </CardContent>
       </Card>
 
+
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300 cursor-pointer">
@@ -683,7 +840,10 @@ const Payments = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300 cursor-pointer">
+        <Card 
+          className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300 cursor-pointer"
+          onClick={exportReport}
+        >
           <CardContent className="p-6 text-center">
             <Download className="h-8 w-8 text-blue-600 mx-auto mb-3" />
             <h3 className="font-semibold text-foreground mb-2">Vergi Raporu</h3>
@@ -703,6 +863,7 @@ const Payments = () => {
           fetchPaymentData();
         }}
       />
+
     </div>
   );
 };

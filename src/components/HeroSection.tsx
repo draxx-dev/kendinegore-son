@@ -88,10 +88,10 @@ export const HeroSection = () => {
   };
 
   return (
-    <div className="relative overflow-hidden bg-transparent">
+    <div id="hero" className="relative overflow-hidden bg-transparent">
       
       {/* Hero Content */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 pt-24">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-playfair font-bold text-gray-900 mb-6 leading-tight">
             <span className={`inline-block transition-all duration-700 ease-out transform ${
@@ -103,6 +103,12 @@ export const HeroSection = () => {
             için Modern CRM
           </h1>
           
+          <div className="mb-6">
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-full px-4 py-2 shadow-sm">
+              <span className="text-sm font-medium text-gray-700">Türkiye'de İlk ve Tek WhatsApp AI Destekli</span>
+            </div>
+          </div>
+          
           <p className="text-xl md:text-2xl text-gray-800 mb-8 max-w-3xl mx-auto leading-relaxed font-inter">
             Randevu yönetiminden müşteri takibine, ödemelerden raporlamaya 
             kadar salonunuzun tüm işlerini tek platformda yönetin.
@@ -112,7 +118,7 @@ export const HeroSection = () => {
             <Button size="lg" className="text-lg px-12 py-6 bg-white/70 backdrop-blur-xl border-white/30 hover:bg-white/80 text-gray-900 shadow-lg transform hover:scale-105 transition-all duration-300 font-inter" asChild>
               <Link to="/auth">
                 <PartyPopper className="w-5 h-5 mr-2" />
-                14 Gün Ücretsiz Deneyin
+                7 Gün Ücretsiz Deneyin
               </Link>
             </Button>
           </div>

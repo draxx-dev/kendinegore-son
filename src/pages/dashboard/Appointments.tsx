@@ -10,6 +10,8 @@ import { CreateAppointmentModal } from "@/components/appointments/CreateAppointm
 import { EditAppointmentModal } from "@/components/appointments/EditAppointmentModal";
 import { PaymentModal } from "@/components/appointments/PaymentModal";
 import CalendarView from "@/components/appointments/CalendarView";
+import { SubscriptionGuard } from "@/components/SubscriptionGuard";
+
 
 interface Appointment {
   id: string;
@@ -19,15 +21,11 @@ interface Appointment {
   status: string;
   total_price: number;
   notes: string | null;
-  appointment_group_id: string;
+  service_ids: string[];
   customers: {
     first_name: string;
     last_name: string;
     phone: string;
-  };
-  services: {
-    name: string;
-    duration_minutes: number;
   };
   staff: {
     id: string;
@@ -41,13 +39,14 @@ interface Appointment {
 }
 
 interface GroupedAppointment {
-  appointment_group_id: string;
+  id: string;
   appointment_date: string;
   start_time: string;
   end_time: string;
   status: string;
   total_price: number;
   notes: string | null;
+  service_ids: string[];
   customers: {
     first_name: string;
     last_name: string;
@@ -61,7 +60,6 @@ interface GroupedAppointment {
     id: string;
     name: string;
   } | null;
-  appointment_ids: string[];
   payments: Array<{
     payment_method: string;
     payment_status: string;
@@ -69,9 +67,18 @@ interface GroupedAppointment {
   }>;
 }
 
+interface WorkingHour {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_closed: boolean;
+}
+
 const Appointments = () => {
+  const [businessId, setBusinessId] = useState<string | undefined>();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [groupedAppointments, setGroupedAppointments] = useState<GroupedAppointment[]>([]);
+  const [workingHours, setWorkingHours] = useState<WorkingHour[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -84,55 +91,93 @@ const Appointments = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchAppointments();
-  }, [selectedDate, statusFilter]);
+    // Business ID'yi localStorage'dan al
+    const storedBusinessId = localStorage.getItem('businessId');
+    if (storedBusinessId) {
+      setBusinessId(storedBusinessId);
+    }
+  }, []);
 
-  const groupAppointments = (appointments: Appointment[]): GroupedAppointment[] => {
-    const groupMap = new Map<string, GroupedAppointment>();
-    
-    appointments.forEach(appointment => {
-      const groupId = appointment.appointment_group_id;
-      
-      if (groupMap.has(groupId)) {
-        const existing = groupMap.get(groupId)!;
-        existing.services.push(appointment.services);
-        existing.appointment_ids.push(appointment.id);
-        // Payments'i birleştir
-        if (appointment.payments) {
-          existing.payments.push(...appointment.payments);
+  useEffect(() => {
+    if (businessId) {
+      fetchAppointments();
+      fetchWorkingHours();
+    }
+  }, [businessId, selectedDate, statusFilter]);
+
+  const fetchWorkingHours = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('working_hours')
+        .select('*')
+        .is('staff_id', null) // Genel işletme çalışma saatleri
+        .order('day_of_week');
+
+      if (error) throw error;
+      setWorkingHours(data || []);
+    } catch (error) {
+      console.error('Working hours fetch error:', error);
+    }
+  };
+
+  const groupAppointments = async (appointments: Appointment[]): Promise<GroupedAppointment[]> => {
+    // Her randevu için service_ids'den servis bilgilerini çek
+    const groupedAppointments = await Promise.all(
+      appointments.map(async (appointment) => {
+        // service_ids array'inden servis bilgilerini çek
+        const { data: services, error } = await supabase
+          .from('services')
+          .select('name, duration_minutes')
+          .in('id', appointment.service_ids);
+
+        if (error) {
+          console.error('Service fetch error:', error);
+          return null;
         }
-      } else {
-        groupMap.set(groupId, {
-          appointment_group_id: groupId,
+
+        return {
+          id: appointment.id,
           appointment_date: appointment.appointment_date,
           start_time: appointment.start_time,
           end_time: appointment.end_time,
           status: appointment.status,
           total_price: appointment.total_price,
           notes: appointment.notes,
+          service_ids: appointment.service_ids,
           customers: appointment.customers,
-          services: [appointment.services],
+          services: services || [], // Servis bilgileri array olarak
           staff: appointment.staff,
-          appointment_ids: [appointment.id],
           payments: appointment.payments || []
-        });
-      }
-    });
-    
-    return Array.from(groupMap.values());
+        };
+      })
+    );
+
+    return groupedAppointments.filter(Boolean) as GroupedAppointment[];
   };
 
   const fetchAppointments = async () => {
     try {
+      // Get business ID first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: business } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single();
+
+      if (!business) return;
+
       let query = supabase
         .from('appointments')
         .select(`
           *,
           customers(first_name, last_name, phone),
-          services(name, duration_minutes),
           staff(id, name),
           payments(payment_method, payment_status, amount)
         `)
+        .eq('business_id', business.id) // Business ID filtresi ekle
         .order('start_time', { ascending: true });
 
       if (selectedDate) {
@@ -149,7 +194,7 @@ const Appointments = () => {
       setAppointments(data || []);
       
       // Group appointments by appointment_group_id
-      const grouped = groupAppointments(data || []);
+      const grouped = await groupAppointments(data || []);
       setGroupedAppointments(grouped);
     } catch (error) {
       toast({
@@ -164,11 +209,11 @@ const Appointments = () => {
 
   const updateAppointmentStatus = async (groupedAppointment: GroupedAppointment, newStatus: string) => {
     try {
-      // Update all appointments in the group
+      // Update single appointment
       const { error } = await supabase
         .from('appointments')
         .update({ status: newStatus })
-        .in('id', groupedAppointment.appointment_ids);
+        .eq('id', groupedAppointment.id);
 
       if (error) throw error;
 
@@ -290,8 +335,25 @@ const Appointments = () => {
       );
     }
 
+    // İptal edilen randevular için iptali geri alma seçeneği
+    if (groupedAppointment.status === 'cancelled') {
+      actions.push(
+        <Button 
+          key="uncancel"
+          size="sm" 
+          variant="outline"
+          onClick={() => updateAppointmentStatus(groupedAppointment, 'scheduled')}
+          className="text-green-600 hover:text-green-700"
+        >
+          İptali Geri Al
+        </Button>
+      );
+    }
+
     return actions;
   };
+
+
 
   const todayStats = {
     total: groupedAppointments.length,
@@ -311,7 +373,8 @@ const Appointments = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <SubscriptionGuard businessId={businessId}>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -409,8 +472,9 @@ const Appointments = () => {
         <CalendarView 
           selectedDate={selectedDate}
           appointments={appointments}
-          onStatusUpdate={(groupId, status) => {
-            const groupedAppointment = groupedAppointments.find(g => g.appointment_group_id === groupId);
+          workingHours={workingHours}
+          onStatusUpdate={(appointmentId, status) => {
+            const groupedAppointment = groupedAppointments.find(g => g.id === appointmentId);
             if (groupedAppointment) {
               updateAppointmentStatus(groupedAppointment, status);
             }
@@ -419,7 +483,7 @@ const Appointments = () => {
       ) : (
         <div className="space-y-4">
           {groupedAppointments.map((groupedAppointment) => (
-            <Card key={groupedAppointment.appointment_group_id} className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300">
+            <Card key={groupedAppointment.id} className="bg-white/50 backdrop-blur-sm border-brand-primary/10 hover:shadow-soft transition-all duration-300">
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1">
@@ -572,7 +636,7 @@ const Appointments = () => {
         <PaymentModal
           open={showPaymentModal}
           onOpenChange={setShowPaymentModal}
-          appointmentId={selectedAppointment.appointment_ids[0]} // Use first appointment ID for payment
+          appointmentId={selectedAppointment.id} // Use appointment ID for payment
           totalAmount={selectedAppointment.total_price}
           customerName={`${selectedAppointment.customers.first_name} ${selectedAppointment.customers.last_name}`}
           onSuccess={() => {
@@ -595,6 +659,7 @@ const Appointments = () => {
         />
       )}
     </div>
+    </SubscriptionGuard>
   );
 };
 

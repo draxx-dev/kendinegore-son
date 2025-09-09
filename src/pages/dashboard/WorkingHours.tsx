@@ -19,6 +19,7 @@ const WorkingHours = () => {
   const [workingHours, setWorkingHours] = useState<WorkingHour[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const dayNames = [
@@ -26,20 +27,61 @@ const WorkingHours = () => {
   ];
 
   useEffect(() => {
-    fetchWorkingHours();
+    fetchBusinessId();
   }, []);
 
+  useEffect(() => {
+    if (businessId) {
+      fetchWorkingHours();
+    }
+  }, [businessId]);
+
+  const fetchBusinessId = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: businesses, error } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (businesses) {
+        setBusinessId(businesses.id);
+      }
+    } catch (error) {
+      console.error('Business ID fetch error:', error);
+      toast({
+        title: "Hata",
+        description: "İşletme bilgisi alınırken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchWorkingHours = async () => {
+    if (!businessId) return;
+    
     try {
       const { data, error } = await supabase
         .from('working_hours')
         .select('*')
+        .eq('business_id', businessId)
         .is('staff_id', null)
         .order('day_of_week');
 
       if (error) throw error;
-      setWorkingHours(data || []);
+      
+      if (data && data.length > 0) {
+        setWorkingHours(data);
+      } else {
+        // Eğer çalışma saatleri yoksa varsayılan saatleri oluştur
+        await createDefaultWorkingHours();
+      }
     } catch (error) {
+      console.error('Working hours fetch error:', error);
       toast({
         title: "Hata",
         description: "Çalışma saatleri yüklenirken bir hata oluştu.",
@@ -47,6 +89,52 @@ const WorkingHours = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createDefaultWorkingHours = async () => {
+    if (!businessId) return;
+
+    try {
+      const defaultHours = [
+        { day_of_week: 1, start_time: "09:00", end_time: "18:00", is_closed: false }, // Pazartesi
+        { day_of_week: 2, start_time: "09:00", end_time: "18:00", is_closed: false }, // Salı
+        { day_of_week: 3, start_time: "09:00", end_time: "18:00", is_closed: false }, // Çarşamba
+        { day_of_week: 4, start_time: "09:00", end_time: "18:00", is_closed: false }, // Perşembe
+        { day_of_week: 5, start_time: "09:00", end_time: "18:00", is_closed: false }, // Cuma
+        { day_of_week: 6, start_time: "09:00", end_time: "18:00", is_closed: false }, // Cumartesi
+        { day_of_week: 0, start_time: "09:00", end_time: "18:00", is_closed: true }   // Pazar (kapalı)
+      ];
+
+      const hoursToInsert = defaultHours.map(hour => ({
+        business_id: businessId,
+        staff_id: null,
+        day_of_week: hour.day_of_week,
+        start_time: hour.start_time,
+        end_time: hour.end_time,
+        is_closed: hour.is_closed
+      }));
+
+      const { data, error } = await supabase
+        .from('working_hours')
+        .insert(hoursToInsert)
+        .select();
+
+      if (error) throw error;
+      
+      setWorkingHours(data || []);
+      
+      toast({
+        title: "Varsayılan Saatler Oluşturuldu",
+        description: "Çalışma saatleri varsayılan değerlerle oluşturuldu. İstediğiniz gibi düzenleyebilirsiniz.",
+      });
+    } catch (error) {
+      console.error('Default working hours creation error:', error);
+      toast({
+        title: "Hata",
+        description: "Varsayılan çalışma saatleri oluşturulurken bir hata oluştu.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -71,26 +159,48 @@ const WorkingHours = () => {
   };
 
   const handleSave = async () => {
+    if (!businessId) {
+      toast({
+        title: "Hata",
+        description: "İşletme bilgisi bulunamadı.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
-      for (const workingHour of workingHours) {
-        const { error } = await supabase
-          .from('working_hours')
-          .update({
-            start_time: workingHour.start_time,
-            end_time: workingHour.end_time,
-            is_closed: workingHour.is_closed
-          })
-          .eq('id', workingHour.id);
+      // Önce mevcut çalışma saatlerini sil
+      const { error: deleteError } = await supabase
+        .from('working_hours')
+        .delete()
+        .eq('business_id', businessId)
+        .is('staff_id', null);
 
-        if (error) throw error;
-      }
+      if (deleteError) throw deleteError;
+
+      // Sonra yeni saatleri ekle
+      const hoursToInsert = workingHours.map(wh => ({
+        business_id: businessId,
+        staff_id: null,
+        day_of_week: wh.day_of_week,
+        start_time: wh.start_time,
+        end_time: wh.end_time,
+        is_closed: wh.is_closed
+      }));
+
+      const { error: insertError } = await supabase
+        .from('working_hours')
+        .insert(hoursToInsert);
+
+      if (insertError) throw insertError;
 
       toast({
         title: "Başarılı!",
         description: "Çalışma saatleri güncellendi.",
       });
     } catch (error) {
+      console.error('Save working hours error:', error);
       toast({
         title: "Hata",
         description: "Çalışma saatleri güncellenirken bir hata oluştu.",

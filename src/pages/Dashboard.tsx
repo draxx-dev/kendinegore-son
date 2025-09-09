@@ -10,6 +10,11 @@ import Payments from "./dashboard/Payments";
 import Settings from "./dashboard/Settings";
 import BusinessDetails from "./dashboard/BusinessDetails";
 import OnlineBooking from "./dashboard/OnlineBooking";
+import SMSIntegration from "./dashboard/SMSIntegration";
+import WhatsAppAI from "./dashboard/WhatsAppAI";
+import Contact from "./dashboard/Contact";
+import Roadmap from "./dashboard/Roadmap";
+import SystemPayments from "./dashboard/SystemPayments";
 
 const Dashboard = () => {
   return (
@@ -25,6 +30,11 @@ const Dashboard = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/business-details" element={<BusinessDetails />} />
         <Route path="/online-booking" element={<OnlineBooking />} />
+        <Route path="/sms-integration" element={<SMSIntegration />} />
+        <Route path="/whatsapp-ai" element={<WhatsAppAI />} />
+        <Route path="/system-payments" element={<SystemPayments />} />
+        <Route path="/roadmap" element={<Roadmap />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
     </DashboardLayout>
   );

@@ -142,7 +142,11 @@ export const EditAppointmentModal = ({
     const totalMinutes = hours * 60 + minutes + durationMinutes;
     const endHours = Math.floor(totalMinutes / 60);
     const endMinutes = totalMinutes % 60;
-    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+    
+    // 24 saat formatını aşarsa düzelt (sadece gerekirse)
+    const adjustedEndHours = endHours >= 24 ? endHours - 24 : endHours;
+    
+    return `${adjustedEndHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
   };
 
   const toggleServiceSelection = (serviceId: string) => {
@@ -211,6 +215,9 @@ export const EditAppointmentModal = ({
 
       // Create new appointments for each selected service with the same group_id
       const appointmentPromises = selectedServices.map(async (serviceId) => {
+        const service = services.find(s => s.id === serviceId);
+        if (!service) return;
+        
         const { error } = await supabase
           .from('appointments')
           .insert([{
@@ -221,7 +228,7 @@ export const EditAppointmentModal = ({
             appointment_date: formData.appointment_date,
             start_time: formData.start_time,
             end_time: endTime,
-            total_price: totalPrice,
+            total_price: service.price, // Her servisin kendi fiyatı
             appointment_group_id: appointmentGroup.appointment_group_id,
             notes: formData.notes || null,
             status: appointmentGroup.status

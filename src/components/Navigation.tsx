@@ -16,9 +16,9 @@ export const Navigation = () => {
   }, []);
 
   return (
-    <nav className={`w-full sticky top-0 z-50 transition-all duration-300 ${
+    <nav className={`w-full fixed top-0 z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-white/80 backdrop-blur-lg border-b border-gray-200/50 shadow-sm' 
+        ? 'bg-white/90 backdrop-blur-xl border-b border-white/30 shadow-lg' 
         : 'bg-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

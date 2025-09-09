@@ -40,8 +40,7 @@ export const useStaffPermissions = () => {
       const { data, error } = await supabase
         .from('staff_role_assignments')
         .select(`
-          permission_id,
-          staff_permissions (
+          staff_permissions!inner (
             name
           )
         `)
@@ -50,8 +49,8 @@ export const useStaffPermissions = () => {
       if (error) throw error;
 
       const permissionNames = data?.map(item => 
-        item.staff_permissions?.name
-      ).filter(Boolean) || [];
+        item.staff_permissions.name
+      ) || [];
 
       setPermissions(permissionNames);
     } catch (error) {
