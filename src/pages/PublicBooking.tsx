@@ -989,7 +989,16 @@ const PublicBooking = () => {
   };
 
   // Business ID yüklenene kadar loading göster
-  if (!businessId || loading || subscriptionLoading) {
+  if (!businessId || loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div>
+      </div>
+    );
+  }
+
+  // Subscription loading göster
+  if (subscriptionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div>
@@ -998,7 +1007,7 @@ const PublicBooking = () => {
   }
 
   // Abonelik süresi bitmişse randevu formunu gösterme
-  if (businessId && !hasAccess && business) {
+  if (!hasAccess && business) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
