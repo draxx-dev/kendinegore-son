@@ -20,8 +20,8 @@ export const useSubscriptionStatus = (businessId?: string) => {
     if (!businessId) {
       setSubscriptionStatus({
         status: 'no_subscription',
-        isExpired: true,
-        hasAccess: false,
+        isExpired: false,
+        hasAccess: true,
         loading: false
       });
       return;
