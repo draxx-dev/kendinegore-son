@@ -58,6 +58,9 @@ const Overview = () => {
 
       if (!business) return;
 
+      // Business ID'yi state'e set et
+      setBusinessId(business.id);
+
       const today = new Date();
       const todayStr = format(today, 'yyyy-MM-dd');
       const weekStart = startOfWeek(today, { weekStartsOn: 1 });
