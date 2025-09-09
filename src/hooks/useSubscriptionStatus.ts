@@ -36,10 +36,18 @@ export const useSubscriptionStatus = (businessId?: string) => {
       setSubscriptionStatus(prev => ({ ...prev, loading: true }));
 
       // Abonelik durumunu kontrol et
+      console.log('🔍 Calling RPC with businessId:', businessId, 'type:', typeof businessId);
+      
       const { data: statusData, error: statusError } = await supabase
         .rpc('get_subscription_status', { business_uuid: businessId });
 
       console.log('🔍 RPC Response:', { statusData, statusError });
+      console.log('🔍 RPC Response details:', { 
+        statusDataType: typeof statusData, 
+        statusDataValue: statusData,
+        errorType: typeof statusError,
+        errorValue: statusError
+      });
 
       if (statusError) {
         console.error('❌ Subscription status error:', statusError);
