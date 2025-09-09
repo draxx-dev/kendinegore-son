@@ -39,6 +39,8 @@ export const useSubscriptionStatus = (businessId?: string) => {
       const { data: statusData, error: statusError } = await supabase
         .rpc('get_subscription_status', { business_uuid: businessId });
 
+      console.log('🔍 RPC Response:', { statusData, statusError });
+
       if (statusError) {
         console.error('❌ Subscription status error:', statusError);
         setSubscriptionStatus({
