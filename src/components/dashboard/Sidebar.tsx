@@ -409,7 +409,7 @@ export function DashboardSidebar() {
         </SidebarGroup>
 
         {/* Abonelik Süresi Uyarısı */}
-        {!hasAccess && !subscriptionLoading && (
+        {businessId && !hasAccess && !subscriptionLoading && (
           <div className="px-3 py-2">
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <div className="flex items-center gap-2 text-red-700">

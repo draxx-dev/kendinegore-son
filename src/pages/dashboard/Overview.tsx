@@ -16,9 +16,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, isToday, startOfWeek, endOfWeek } from "date-fns";
 import { tr } from "date-fns/locale";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
+import { SetupProgressCard } from "@/components/dashboard/SetupProgressCard";
+import { useSetupProgress } from "@/hooks/useSetupProgress";
 
 const Overview = () => {
   const [businessId, setBusinessId] = useState<string | undefined>();
+  const { steps, loading: setupLoading, progress, skipStep, unskipStep, checkStepCompletion } = useSetupProgress(businessId);
 
   useEffect(() => {
     // Business ID'yi localStorage'dan al
@@ -219,6 +222,33 @@ const Overview = () => {
           Salon yönetim panelinize hoş geldiniz. İşletmenizi profesyonelce yönetmek için ihtiyacınız olan her şey burada.
         </p>
       </div>
+
+      {/* Setup Progress Card */}
+      <SetupProgressCard
+        steps={steps}
+        progress={progress}
+        loading={setupLoading}
+        onSkip={skipStep}
+        onUnskip={unskipStep}
+        onRefresh={checkStepCompletion}
+      />
+
+      {/* Show Setup Card Button (if hidden) */}
+      {localStorage.getItem('setupProgressHidden') === 'true' && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              localStorage.removeItem('setupProgressHidden');
+              window.location.reload();
+            }}
+            className="text-blue-600 hover:text-blue-700"
+          >
+            Kurulum Kartını Göster
+          </Button>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="mb-10">
