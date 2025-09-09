@@ -151,6 +151,28 @@ export function DashboardSidebar() {
     }
   }, []);
 
+  // Business ID yüklenene kadar loading göster
+  if (!businessId) {
+    return (
+      <Sidebar 
+        className={
+          isMobileDevice 
+            ? "w-72" 
+            : collapsed 
+              ? "w-16" 
+              : "w-64"
+        } 
+        collapsible={isMobileDevice ? "offcanvas" : "icon"}
+      >
+        <SidebarContent className="bg-white border-r border-border shadow-sm">
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
+
   const isActive = (path: string) => {
     if (path === "/dashboard") {
       return currentPath === "/dashboard";

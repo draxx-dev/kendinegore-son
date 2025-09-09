@@ -364,6 +364,15 @@ const Appointments = () => {
       .reduce((sum, a) => sum + Number(a.total_price), 0)
   };
 
+  // Business ID yüklenene kadar loading göster
+  if (!businessId) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
