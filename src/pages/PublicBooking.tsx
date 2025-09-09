@@ -133,9 +133,6 @@ const PublicBooking = () => {
   const [business, setBusiness] = useState<Business | null>(null);
   const [businessId, setBusinessId] = useState<string | undefined>();
   const { hasAccess, loading: subscriptionLoading } = useSubscriptionStatus(businessId);
-  
-  // Debug log
-  console.log('🔍 PublicBooking debug:', { businessId, hasAccess, subscriptionLoading });
   const [services, setServices] = useState<Service[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [portfolioImages, setPortfolioImages] = useState<PortfolioImage[]>([]);
@@ -1001,7 +998,7 @@ const PublicBooking = () => {
   }
 
   // Abonelik süresi bitmişse randevu formunu gösterme
-  if (!hasAccess && business) {
+  if (businessId && !hasAccess && business) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
