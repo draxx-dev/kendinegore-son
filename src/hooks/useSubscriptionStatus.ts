@@ -32,6 +32,7 @@ export const useSubscriptionStatus = (businessId?: string) => {
 
   const checkSubscriptionStatus = async () => {
     try {
+      console.log('🔍 Checking subscription status for businessId:', businessId);
       setSubscriptionStatus(prev => ({ ...prev, loading: true }));
 
       // Abonelik durumunu kontrol et
@@ -39,7 +40,7 @@ export const useSubscriptionStatus = (businessId?: string) => {
         .rpc('get_subscription_status', { business_uuid: businessId });
 
       if (statusError) {
-        console.error('Subscription status error:', statusError);
+        console.error('❌ Subscription status error:', statusError);
         setSubscriptionStatus({
           status: 'no_subscription',
           isExpired: true,
@@ -53,6 +54,8 @@ export const useSubscriptionStatus = (businessId?: string) => {
       const isExpired = status === 'expired' || status === 'no_subscription';
       const hasAccess = status === 'trial' || status === 'active';
 
+      console.log('✅ Subscription status result:', { status, isExpired, hasAccess });
+
       setSubscriptionStatus({
         status,
         isExpired,
@@ -61,7 +64,7 @@ export const useSubscriptionStatus = (businessId?: string) => {
       });
 
     } catch (error) {
-      console.error('Error checking subscription status:', error);
+      console.error('❌ Error checking subscription status:', error);
       setSubscriptionStatus({
         status: 'no_subscription',
         isExpired: true,
