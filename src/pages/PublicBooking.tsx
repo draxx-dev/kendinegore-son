@@ -991,7 +991,7 @@ const PublicBooking = () => {
   // Business ID yüklenene kadar loading göster
   if (!businessId || loading || subscriptionLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div>
       </div>
     );
@@ -1000,7 +1000,7 @@ const PublicBooking = () => {
   // Abonelik süresi bitmişse randevu formunu gösterme
   if (businessId && !hasAccess && business) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="text-center py-8">
             <div className="flex justify-center mb-4">
@@ -1027,7 +1027,7 @@ const PublicBooking = () => {
 
   if (!business) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="text-center py-8">
             <h2 className="text-2xl font-bold mb-4">İşletme Bulunamadı</h2>
