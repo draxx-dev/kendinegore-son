@@ -26,8 +26,8 @@ export const Footer = () => {
               KendineGöre
             </h3>
                 <p className="text-gray-600 mb-4 max-w-md text-sm leading-relaxed">
-                  Güzellik salonları, berberler ve kuaförler için geliştirilmiş
-                  modern CRM ve randevu yönetim sistemi.
+                  Güzellik salonları, Berberler ve Kuaförler için randevu sistemi ve salon yönetim yazılımı. 
+                  WhatsApp AI destekli modern CRM sistemi.
                 </p>
 
                 {/* Contact Info */}
@@ -70,6 +70,22 @@ export const Footer = () => {
                 >
                   Fiyatlar
                 </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => scrollToSection('seo-content')}
+                  className="hover:text-indigo-500 transition-colors text-sm"
+                >
+                  Güzellik Salonu, Berberi Kuaför Randevu Sistemi
+                </button>
+              </li>
+              <li>
+                <a
+                  href="/auth"
+                  className="hover:text-indigo-500 transition-colors text-sm"
+                >
+                  Salon Yönetim Yazılımı
+                </a>
               </li>
             </ul>
           </div>

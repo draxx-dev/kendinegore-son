@@ -32,11 +32,23 @@ export const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
+            <button 
+              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              className="text-foreground hover:text-foreground hover:bg-secondary/50 px-3 py-2 rounded-md transition-colors"
+            >
+              Özellikler
+            </button>
+            <button 
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              className="text-foreground hover:text-foreground hover:bg-secondary/50 px-3 py-2 rounded-md transition-colors"
+            >
+              Fiyatlar
+            </button>
             <Button variant="ghost" className="text-foreground hover:text-foreground hover:bg-secondary/50" asChild>
               <Link to="/auth">Giriş Yap</Link>
             </Button>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg" asChild>
-              <Link to="/auth">İşletmeni Kaydet</Link>
+              <Link to="/auth">Randevu Sistemi Dene</Link>
             </Button>
           </div>
 
